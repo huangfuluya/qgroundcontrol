@@ -84,49 +84,49 @@
             "name": "enableManualControlAux1",
             "shortDesc": "Enable manual control for Aux 1",
             "type": "bool",
-            "default": false
+            "default": true
         },
         {
             "name": "enableManualControlAux2",
             "shortDesc": "Enable manual control for Aux 2",
             "type": "bool",
-            "default": false
+            "default": true
         },
         {
             "name": "enableManualControlAux3",
             "shortDesc": "Enable manual control for Aux 3",
             "type": "bool",
-            "default": false
+            "default": true
         },
         {
             "name": "enableManualControlAux4",
             "shortDesc": "Enable manual control for Aux 4",
             "type": "bool",
-            "default": false
+            "default": true
         },
         {
             "name": "enableManualControlAux5",
             "shortDesc": "Enable manual control for Aux 5",
             "type": "bool",
-            "default": false
+            "default": true
         },
         {
             "name": "enableManualControlAux6",
             "shortDesc": "Enable manual control for Aux 6",
             "type": "bool",
-            "default": false
+            "default": true
         },
         {
             "name": "enableManualControlPitchExtension",
             "shortDesc": "Enable manual control pitch extension",
             "type": "bool",
-            "default": false
+            "default": true
         },
         {
             "name": "enableManualControlRollExtension",
             "shortDesc": "Enable manual control roll extension",
             "type": "bool",
-            "default": false
+            "default": true
         }
     ]
 }

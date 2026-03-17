@@ -344,67 +344,42 @@ void Joystick::_loadAxisSettings(bool joystickCalibrated, int transmitterMode)
     if (throttleFunctionNotAssigned) {
         qCWarning(JoystickLog) << "Throttle axis function not assigned";
     }
-    bool pitchExtensionFunctionRequiredButNotAssigned = false;
-    if (_joystickSettings.enableManualControlPitchExtension()->rawValue().toBool()) {
-        pitchExtensionFunctionRequiredButNotAssigned = _getJoystickAxisForAxisFunction(pitchExtensionFunction) == kJoystickAxisNotAssigned;
-        if (pitchExtensionFunctionRequiredButNotAssigned) {
-            qCWarning(JoystickLog) << "Internal Error: Missing pitch extension axis function mapping!";
-        }
+    // Extension channels (pitchExtension, rollExtension, aux1-aux6) are optional: if enabled but not assigned,
+    // they are skipped (not forwarded) and a debug message is logged.
+    if (_joystickSettings.enableManualControlPitchExtension()->rawValue().toBool() &&
+            _getJoystickAxisForAxisFunction(pitchExtensionFunction) == kJoystickAxisNotAssigned) {
+        qCDebug(JoystickLog) << "Pitch extension enabled but axis not assigned, channel will not be forwarded";
     }
-    bool rollExtensionFunctionRequiredButNotAssigned = false;
-    if (_joystickSettings.enableManualControlRollExtension()->rawValue().toBool()) {
-        rollExtensionFunctionRequiredButNotAssigned = _getJoystickAxisForAxisFunction(rollExtensionFunction) == kJoystickAxisNotAssigned;
-        if (rollExtensionFunctionRequiredButNotAssigned) {
-            qCWarning(JoystickLog) << "Internal Error: Missing roll extension axis function mapping!";
-        }
+    if (_joystickSettings.enableManualControlRollExtension()->rawValue().toBool() &&
+            _getJoystickAxisForAxisFunction(rollExtensionFunction) == kJoystickAxisNotAssigned) {
+        qCDebug(JoystickLog) << "Roll extension enabled but axis not assigned, channel will not be forwarded";
     }
-    bool aux1ExtensionFunctionRequiredButNotAssigned = false;
-    if (_joystickSettings.enableManualControlAux1()->rawValue().toBool()) {
-        aux1ExtensionFunctionRequiredButNotAssigned = _getJoystickAxisForAxisFunction(aux1ExtensionFunction) == kJoystickAxisNotAssigned;
-        if (aux1ExtensionFunctionRequiredButNotAssigned) {
-            qCWarning(JoystickLog) << "Internal Error: Missing aux1 extension axis function mapping!";
-        }
+    if (_joystickSettings.enableManualControlAux1()->rawValue().toBool() &&
+            _getJoystickAxisForAxisFunction(aux1ExtensionFunction) == kJoystickAxisNotAssigned) {
+        qCDebug(JoystickLog) << "Aux1 extension enabled but axis not assigned, channel will not be forwarded";
     }
-    bool aux2ExtensionFunctionRequiredButNotAssigned = false;
-    if (_joystickSettings.enableManualControlAux2()->rawValue().toBool()) {
-        aux2ExtensionFunctionRequiredButNotAssigned = _getJoystickAxisForAxisFunction(aux2ExtensionFunction) == kJoystickAxisNotAssigned;
-        if (aux2ExtensionFunctionRequiredButNotAssigned) {
-            qCWarning(JoystickLog) << "Internal Error: Missing aux2 extension axis function mapping!";
-        }
+    if (_joystickSettings.enableManualControlAux2()->rawValue().toBool() &&
+            _getJoystickAxisForAxisFunction(aux2ExtensionFunction) == kJoystickAxisNotAssigned) {
+        qCDebug(JoystickLog) << "Aux2 extension enabled but axis not assigned, channel will not be forwarded";
     }
-    bool aux3ExtensionFunctionRequiredButNotAssigned = false;
-    if (_joystickSettings.enableManualControlAux3()->rawValue().toBool()) {
-        aux3ExtensionFunctionRequiredButNotAssigned = _getJoystickAxisForAxisFunction(aux3ExtensionFunction) == kJoystickAxisNotAssigned;
-        if (aux3ExtensionFunctionRequiredButNotAssigned) {
-            qCWarning(JoystickLog) << "Internal Error: Missing aux3 extension axis function mapping!";
-        }
+    if (_joystickSettings.enableManualControlAux3()->rawValue().toBool() &&
+            _getJoystickAxisForAxisFunction(aux3ExtensionFunction) == kJoystickAxisNotAssigned) {
+        qCDebug(JoystickLog) << "Aux3 extension enabled but axis not assigned, channel will not be forwarded";
     }
-    bool aux4ExtensionFunctionRequiredButNotAssigned = false;
-    if (_joystickSettings.enableManualControlAux4()->rawValue().toBool()) {
-        aux4ExtensionFunctionRequiredButNotAssigned = _getJoystickAxisForAxisFunction(aux4ExtensionFunction) == kJoystickAxisNotAssigned;
-        if (aux4ExtensionFunctionRequiredButNotAssigned) {
-            qCWarning(JoystickLog) << "Internal Error: Missing aux4 extension axis function mapping!";
-        }
+    if (_joystickSettings.enableManualControlAux4()->rawValue().toBool() &&
+            _getJoystickAxisForAxisFunction(aux4ExtensionFunction) == kJoystickAxisNotAssigned) {
+        qCDebug(JoystickLog) << "Aux4 extension enabled but axis not assigned, channel will not be forwarded";
     }
-    bool aux5ExtensionFunctionRequiredButNotAssigned = false;
-    if (_joystickSettings.enableManualControlAux5()->rawValue().toBool()) {
-        aux5ExtensionFunctionRequiredButNotAssigned = _getJoystickAxisForAxisFunction(aux5ExtensionFunction) == kJoystickAxisNotAssigned;
-        if (aux5ExtensionFunctionRequiredButNotAssigned) {
-            qCWarning(JoystickLog) << "Internal Error: Missing aux5 extension axis function mapping!";
-        }
+    if (_joystickSettings.enableManualControlAux5()->rawValue().toBool() &&
+            _getJoystickAxisForAxisFunction(aux5ExtensionFunction) == kJoystickAxisNotAssigned) {
+        qCDebug(JoystickLog) << "Aux5 extension enabled but axis not assigned, channel will not be forwarded";
     }
-    bool aux6ExtensionFunctionRequiredButNotAssigned = false;
-    if (_joystickSettings.enableManualControlAux6()->rawValue().toBool()) {
-        aux6ExtensionFunctionRequiredButNotAssigned = _getJoystickAxisForAxisFunction(aux6ExtensionFunction) == kJoystickAxisNotAssigned;
-        if (aux6ExtensionFunctionRequiredButNotAssigned) {
-            qCWarning(JoystickLog) << "Internal Error: Missing aux6 extension axis function mapping!";
-        }
+    if (_joystickSettings.enableManualControlAux6()->rawValue().toBool() &&
+            _getJoystickAxisForAxisFunction(aux6ExtensionFunction) == kJoystickAxisNotAssigned) {
+        qCDebug(JoystickLog) << "Aux6 extension enabled but axis not assigned, channel will not be forwarded";
     }
-    if (rollFunctionNotAssigned || pitchFunctionNotAssigned || yawFunctionNotAssigned || throttleFunctionNotAssigned ||
-            pitchExtensionFunctionRequiredButNotAssigned || rollExtensionFunctionRequiredButNotAssigned ||
-            aux1ExtensionFunctionRequiredButNotAssigned || aux2ExtensionFunctionRequiredButNotAssigned || aux3ExtensionFunctionRequiredButNotAssigned ||
-            aux4ExtensionFunctionRequiredButNotAssigned || aux5ExtensionFunctionRequiredButNotAssigned || aux6ExtensionFunctionRequiredButNotAssigned) {
-        qCWarning(JoystickLog) << "Missing control axis function(s), resetting all axis settings, marking joystick as uncalibrated and disabled";
+    if (rollFunctionNotAssigned || pitchFunctionNotAssigned || yawFunctionNotAssigned || throttleFunctionNotAssigned) {
+        qCWarning(JoystickLog) << "Missing required axis function(s) (roll, pitch, yaw, or throttle), resetting all axis settings, marking joystick as uncalibrated and disabled";
         _resetAxisCalibrationData();
         _clearAxisSettings();
         _joystickSettings.calibrated()->setRawValue(false);
@@ -903,75 +878,59 @@ void Joystick::_handleAxis()
 
         float pitchExtension = qQNaN();
         if (_joystickSettings.enableManualControlPitchExtension()->rawValue().toBool()) {
-            if (_getJoystickAxisForAxisFunction(pitchExtensionFunction) == kJoystickAxisNotAssigned) {
-                qCWarning(JoystickLog) << "Internal Error: Missing pitch extension axis function mapping!";
-                return;
-            }
             axisIndex = _getJoystickAxisForAxisFunction(pitchExtensionFunction);
-            pitchExtension = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            if (axisIndex != kJoystickAxisNotAssigned) {
+                pitchExtension = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            }
         }
         float rollExtension = qQNaN();
         if (_joystickSettings.enableManualControlRollExtension()->rawValue().toBool()) {
-            if (_getJoystickAxisForAxisFunction(rollExtensionFunction) == kJoystickAxisNotAssigned) {
-                qCWarning(JoystickLog) << "Internal Error: Missing roll extension axis function mapping!";
-                return;
-            }
             axisIndex = _getJoystickAxisForAxisFunction(rollExtensionFunction);
-            rollExtension = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            if (axisIndex != kJoystickAxisNotAssigned) {
+                rollExtension = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            }
         }
         float aux1 = qQNaN();
         if (_joystickSettings.enableManualControlAux1()->rawValue().toBool()) {
-            if (_getJoystickAxisForAxisFunction(aux1ExtensionFunction) == kJoystickAxisNotAssigned) {
-                qCWarning(JoystickLog) << "Internal Error: Missing aux1 extension axis function mapping!";
-                return;
-            }
             axisIndex = _getJoystickAxisForAxisFunction(aux1ExtensionFunction);
-            aux1 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            if (axisIndex != kJoystickAxisNotAssigned) {
+                aux1 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            }
         }
         float aux2 = qQNaN();
         if (_joystickSettings.enableManualControlAux2()->rawValue().toBool()) {
-            if (_getJoystickAxisForAxisFunction(aux2ExtensionFunction) == kJoystickAxisNotAssigned) {
-                qCWarning(JoystickLog) << "Internal Error: Missing aux2 extension axis function mapping!";
-                return;
-            }
             axisIndex = _getJoystickAxisForAxisFunction(aux2ExtensionFunction);
-            aux2 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            if (axisIndex != kJoystickAxisNotAssigned) {
+                aux2 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            }
         }
         float aux3 = qQNaN();
         if (_joystickSettings.enableManualControlAux3()->rawValue().toBool()) {
-            if (_getJoystickAxisForAxisFunction(aux3ExtensionFunction) == kJoystickAxisNotAssigned) {
-                qCWarning(JoystickLog) << "Internal Error: Missing aux3 extension axis function mapping!";
-                return;
-            }
             axisIndex = _getJoystickAxisForAxisFunction(aux3ExtensionFunction);
-            aux3 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            if (axisIndex != kJoystickAxisNotAssigned) {
+                aux3 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            }
         }
         float aux4 = qQNaN();
         if (_joystickSettings.enableManualControlAux4()->rawValue().toBool()) {
-            if (_getJoystickAxisForAxisFunction(aux4ExtensionFunction) == kJoystickAxisNotAssigned) {
-                qCWarning(JoystickLog) << "Internal Error: Missing aux4 extension axis function mapping!";
-                return;
-            }
             axisIndex = _getJoystickAxisForAxisFunction(aux4ExtensionFunction);
-            aux4 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            if (axisIndex != kJoystickAxisNotAssigned) {
+                aux4 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            }
         }
         float aux5 = qQNaN();
         if (_joystickSettings.enableManualControlAux5()->rawValue().toBool()) {
-            if (_getJoystickAxisForAxisFunction(aux5ExtensionFunction) == kJoystickAxisNotAssigned) {
-                qCWarning(JoystickLog) << "Internal Error: Missing aux5 extension axis function mapping!";
-                return;
-            }
             axisIndex = _getJoystickAxisForAxisFunction(aux5ExtensionFunction);
-            aux5 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            if (axisIndex != kJoystickAxisNotAssigned) {
+                aux5 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            }
         }
         float aux6 = qQNaN();
         if (_joystickSettings.enableManualControlAux6()->rawValue().toBool()) {
-            if (_getJoystickAxisForAxisFunction(aux6ExtensionFunction) == kJoystickAxisNotAssigned) {
-                qCWarning(JoystickLog) << "Internal Error: Missing aux6 extension axis function mapping!";
-                return;
-            }
             axisIndex = _getJoystickAxisForAxisFunction(aux6ExtensionFunction);
-            aux6 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            if (axisIndex != kJoystickAxisNotAssigned) {
+                aux6 = _adjustRange(_getAxisValue(axisIndex), _rgCalibration[axisIndex], useDeadband);
+            }
         }
 
         if (throttleSmoothing) {
