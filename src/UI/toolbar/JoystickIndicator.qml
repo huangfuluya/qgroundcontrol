@@ -26,6 +26,13 @@ Item {
             contentComponent: SettingsGroupLayout {
                 heading: _activeJoystick ? _activeJoystick.name : qsTr("Joystick")
 
+                QGCButton {
+                    text:    _joystickEnabled ? qsTr("Disable Joystick") : qsTr("Enable Joystick")
+                    enabled: globals.activeVehicle
+                    onClicked: joystickManager.activeJoystickEnabledForActiveVehicle = !joystickManager.activeJoystickEnabledForActiveVehicle
+                    Layout.fillWidth: true
+                }
+
                 GridLayout {
                     columns:        2
                     columnSpacing:  ScreenTools.defaultFontPixelWidth * 2
