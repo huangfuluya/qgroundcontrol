@@ -6,12 +6,6 @@
 #include "Vehicle.h"
 #include "VideoManager.h"
 
-namespace {
-    constexpr float kRecordingServoChannel = 12.0f;
-    constexpr float kRecordingActivePwm    = 2000.0f;
-    constexpr float kRecordingInactivePwm  = 1000.0f;
-}
-
 QGC_LOGGING_CATEGORY(SimulatedCameraControlLog, "Camera.SimulatedCameraControl")
 
 SimulatedCameraControl::SimulatedCameraControl(Vehicle *vehicle, QObject *parent)
@@ -181,8 +175,6 @@ bool SimulatedCameraControl::startVideoRecording()
     _videoRecordTimeUpdateTimer.start();
     _videoRecordTimeElapsedTimer.start();
     VideoManager::instance()->startRecording();
-    // Control flight controller output channel 12 to PWM 2000 when recording starts
-    _vehicle->sendMavCommand(MAV_COMP_ID_AUTOPILOT1, MAV_CMD_DO_SET_SERVO, true, kRecordingServoChannel, kRecordingActivePwm);
     return true;
 }
 
@@ -195,8 +187,6 @@ bool SimulatedCameraControl::stopVideoRecording()
 
     _videoRecordTimeUpdateTimer.stop();
     VideoManager::instance()->stopRecording();
-    // Control flight controller output channel 12 to PWM 1000 when recording stops
-    _vehicle->sendMavCommand(MAV_COMP_ID_AUTOPILOT1, MAV_CMD_DO_SET_SERVO, true, kRecordingServoChannel, kRecordingInactivePwm);
     return true;
 }
 

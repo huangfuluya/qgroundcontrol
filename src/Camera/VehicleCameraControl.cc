@@ -25,12 +25,6 @@
 
 #include "QGCNetworkHelper.h"
 
-namespace {
-    constexpr float kRecordingServoChannel = 12.0f;
-    constexpr float kRecordingActivePwm    = 2000.0f;
-    constexpr float kRecordingInactivePwm  = 1000.0f;
-}
-
 QGCCameraOptionExclusion::QGCCameraOptionExclusion(QObject* parent, QString param_, QString value_, QStringList exclusions_)
     : QObject(parent)
     , param(param_)
@@ -521,9 +515,6 @@ bool VehicleCameraControl::startVideoRecording()
         VideoManager::instance()->startRecording();
     }
 
-    // Control flight controller output channel 12 to PWM 2000 when recording starts
-    _vehicle->sendMavCommand(MAV_COMP_ID_AUTOPILOT1, MAV_CMD_DO_SET_SERVO, true, kRecordingServoChannel, kRecordingActivePwm);
-
     return true;
 }
 
@@ -551,9 +542,6 @@ bool VehicleCameraControl::stopVideoRecording()
     } else {
         VideoManager::instance()->stopRecording();
     }
-
-    // Control flight controller output channel 12 to PWM 1000 when recording stops
-    _vehicle->sendMavCommand(MAV_COMP_ID_AUTOPILOT1, MAV_CMD_DO_SET_SERVO, true, kRecordingServoChannel, kRecordingInactivePwm);
 
     return true;
 }

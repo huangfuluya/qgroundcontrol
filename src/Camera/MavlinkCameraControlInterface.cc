@@ -1,19 +1,47 @@
 #include "MavlinkCameraControlInterface.h"
 #include "QGCLoggingCategory.h"
+#include "Vehicle.h"
 
 QGC_LOGGING_CATEGORY(CameraControlLog, "Camera.MavlinkCameraControlInterface")
 QGC_LOGGING_CATEGORY(CameraControlVerboseLog, "Camera.MavlinkCameraControlInterface:verbose")
+
+namespace {
+    constexpr float kRecordingServoChannel  = 12.0f;
+    constexpr float kRecordingActivePwm     = 1000.0f;  // PWM when recording is active
+    constexpr float kRecordingInactivePwm   = 1500.0f;  // PWM when recording is stopped
+    constexpr int   kServoControlIntervalMs = 500;      // 2 Hz polling
+}
 
 MavlinkCameraControlInterface::MavlinkCameraControlInterface(Vehicle *vehicle, QObject *parent)
     : FactGroup(0, parent, true /* ignore camel case */)
     , _vehicle(vehicle)
 {
     qCDebug(CameraControlLog) << this;
+
+    _servoControlTimer.setInterval(kServoControlIntervalMs);
+    _servoControlTimer.setSingleShot(false);
+    (void) connect(&_servoControlTimer, &QTimer::timeout, this, &MavlinkCameraControlInterface::_updateServoControl);
+    _servoControlTimer.start();
 }
 
 MavlinkCameraControlInterface::~MavlinkCameraControlInterface()
 {
     qCDebug(CameraControlLog) << this;
+    _servoControlTimer.stop();
+}
+
+void MavlinkCameraControlInterface::_updateServoControl()
+{
+    if (!_vehicle) {
+        return;
+    }
+    const bool recording = captureVideoState() == CaptureVideoStateCapturing;
+    _vehicle->sendMavCommand(
+        MAV_COMP_ID_AUTOPILOT1,
+        MAV_CMD_DO_SET_SERVO,
+        false,  // showError: false to avoid repeated error dialogs
+        kRecordingServoChannel,
+        recording ? kRecordingActivePwm : kRecordingInactivePwm);
 }
 
 QString MavlinkCameraControlInterface::captureImageStatusToStr(uint8_t image_status)
