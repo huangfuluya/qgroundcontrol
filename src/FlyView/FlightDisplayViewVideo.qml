@@ -27,6 +27,8 @@ Item {
     property int    _fitMode:           QGroundControl.settingsManager.videoSettings.videoFit.rawValue
     property bool   _showStreamLoader:  QGroundControl.videoManager.decoding
     property bool   _showUvcLoader:     QGroundControl.videoManager.isUvc
+    property bool   _secondaryStreamConfigured: QGroundControl.settingsManager.videoSettings.secondaryStreamConfigured
+    property int    _activeVideoStream: QGroundControl.videoManager.activeVideoStream
 
     property bool   _isMode_FIT_WIDTH:  _fitMode === 0
     property bool   _isMode_FIT_HEIGHT: _fitMode === 1
@@ -238,6 +240,31 @@ Item {
                 }
             }
             property int zoom: 0
+        }
+    }
+
+    // Stream switch buttons - shown when secondary stream is configured
+    Row {
+        id:                 streamSwitchRow
+        anchors.top:        parent.top
+        anchors.left:       parent.left
+        anchors.topMargin:  ScreenTools.defaultFontPixelHeight * 0.5
+        anchors.leftMargin: ScreenTools.defaultFontPixelHeight * 0.5
+        spacing:            ScreenTools.defaultFontPixelWidth * 0.5
+        visible:            _secondaryStreamConfigured && !QGroundControl.videoManager.fullScreen
+        z:                  1
+
+        QGCButton {
+            text:           qsTr("Stream 1")
+            pointSize:      ScreenTools.smallFontPointSize
+            opacity:        _activeVideoStream === 0 ? 1.0 : 0.6
+            onClicked:      QGroundControl.videoManager.activeVideoStream = 0
+        }
+        QGCButton {
+            text:           qsTr("Stream 2")
+            pointSize:      ScreenTools.smallFontPointSize
+            opacity:        _activeVideoStream === 1 ? 1.0 : 0.6
+            onClicked:      QGroundControl.videoManager.activeVideoStream = 1
         }
     }
 }

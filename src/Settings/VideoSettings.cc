@@ -52,6 +52,30 @@ DECLARE_SETTINGGROUP(Video, "Video")
 
     _nameToMetaDataMap[videoSourceName]->setEnumInfo(videoSourceCookedList, videoSourceList);
 
+    // Setup secondary video source enum (same options as primary, always starts with Disabled)
+    QVariantList secondaryVideoSourceList;
+    secondaryVideoSourceList.append(videoDisabled);
+#if defined(QGC_GST_STREAMING) || defined(QGC_QT_STREAMING)
+    secondaryVideoSourceList.append(videoSourceRTSP);
+    secondaryVideoSourceList.append(videoSourceUDPH264);
+    secondaryVideoSourceList.append(videoSourceUDPH265);
+    secondaryVideoSourceList.append(videoSourceTCP);
+    secondaryVideoSourceList.append(videoSourceMPEGTS);
+    secondaryVideoSourceList.append(videoSource3DRSolo);
+    secondaryVideoSourceList.append(videoSourceParrotDiscovery);
+    secondaryVideoSourceList.append(videoSourceYuneecMantisG);
+    #ifdef QGC_HERELINK_AIRUNIT_VIDEO
+        secondaryVideoSourceList.append(videoSourceHerelinkAirUnit);
+    #else
+        secondaryVideoSourceList.append(videoSourceHerelinkHotspot);
+    #endif
+#endif
+    QStringList secondaryVideoSourceCookedList;
+    for (const QVariant& videoSource: secondaryVideoSourceList) {
+        secondaryVideoSourceCookedList.append( VideoSettings::tr(videoSource.toString().toStdString().c_str()) );
+    }
+    _nameToMetaDataMap[secondaryVideoSourceName]->setEnumInfo(secondaryVideoSourceCookedList, secondaryVideoSourceList);
+
     _setForceVideoDecodeList();
 
     // Set default value for videoSource
@@ -65,6 +89,7 @@ void VideoSettings::_setDefaults()
     } else {
         _nameToMetaDataMap[videoSourceName]->setRawDefaultValue(videoDisabled);
     }
+    _nameToMetaDataMap[secondaryVideoSourceName]->setRawDefaultValue(videoDisabled);
 }
 
 DECLARE_SETTINGSFACT(VideoSettings, aspectRatio)
@@ -175,6 +200,45 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, tcpUrl)
     return _tcpUrlFact;
 }
 
+DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, secondaryVideoSource)
+{
+    if (!_secondaryVideoSourceFact) {
+        _secondaryVideoSourceFact = _createSettingsFact(secondaryVideoSourceName);
+        if (!_secondaryVideoSourceFact->enumValues().contains(_secondaryVideoSourceFact->rawValue().toString())) {
+            _secondaryVideoSourceFact->setRawValue(videoDisabled);
+        }
+        connect(_secondaryVideoSourceFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
+    }
+    return _secondaryVideoSourceFact;
+}
+
+DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, secondaryUdpUrl)
+{
+    if (!_secondaryUdpUrlFact) {
+        _secondaryUdpUrlFact = _createSettingsFact(secondaryUdpUrlName);
+        connect(_secondaryUdpUrlFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
+    }
+    return _secondaryUdpUrlFact;
+}
+
+DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, secondaryRtspUrl)
+{
+    if (!_secondaryRtspUrlFact) {
+        _secondaryRtspUrlFact = _createSettingsFact(secondaryRtspUrlName);
+        connect(_secondaryRtspUrlFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
+    }
+    return _secondaryRtspUrlFact;
+}
+
+DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, secondaryTcpUrl)
+{
+    if (!_secondaryTcpUrlFact) {
+        _secondaryTcpUrlFact = _createSettingsFact(secondaryTcpUrlName);
+        connect(_secondaryTcpUrlFact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
+    }
+    return _secondaryTcpUrlFact;
+}
+
 bool VideoSettings::streamConfigured(void)
 {
     //-- First, check if it's autoconfigured
@@ -226,9 +290,28 @@ bool VideoSettings::streamConfigured(void)
     return false;
 }
 
+bool VideoSettings::secondaryStreamConfigured(void)
+{
+    const QString vSource = secondaryVideoSource()->rawValue().toString();
+    if (vSource.isEmpty() || vSource == videoSourceNoVideo || vSource == videoDisabled) {
+        return false;
+    }
+    if (vSource == videoSourceUDPH264 || vSource == videoSourceUDPH265 || vSource == videoSourceMPEGTS) {
+        return !secondaryUdpUrl()->rawValue().toString().isEmpty();
+    }
+    if (vSource == videoSourceRTSP) {
+        return !secondaryRtspUrl()->rawValue().toString().isEmpty();
+    }
+    if (vSource == videoSourceTCP) {
+        return !secondaryTcpUrl()->rawValue().toString().isEmpty();
+    }
+    return true;
+}
+
 void VideoSettings::_configChanged(QVariant)
 {
     emit streamConfiguredChanged(streamConfigured());
+    emit secondaryStreamConfiguredChanged(secondaryStreamConfigured());
 }
 
 void VideoSettings::_setForceVideoDecodeList()

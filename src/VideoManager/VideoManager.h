@@ -33,6 +33,7 @@ class VideoManager : public QObject
     Q_PROPERTY(bool     isUvc                   READ isUvc                                      NOTIFY isUvcChanged)
     Q_PROPERTY(bool     recording               READ recording                                  NOTIFY recordingChanged)
     Q_PROPERTY(bool     streaming               READ streaming                                  NOTIFY streamingChanged)
+    Q_PROPERTY(int      activeVideoStream       READ activeVideoStream  WRITE setActiveVideoStream NOTIFY activeVideoStreamChanged)
     Q_PROPERTY(double   aspectRatio             READ aspectRatio                                NOTIFY aspectRatioChanged)
     Q_PROPERTY(double   hfov                    READ hfov                                       NOTIFY aspectRatioChanged)
     Q_PROPERTY(double   thermalAspectRatio      READ thermalAspectRatio                         NOTIFY aspectRatioChanged)
@@ -66,6 +67,11 @@ public:
     bool isUvc() const;
     bool recording() const { return _recording; }
     bool streaming() const { return _streaming; }
+    int  activeVideoStream() const { return _activeVideoStream; }
+    void setActiveVideoStream(int stream);
+
+    static constexpr int kPrimaryVideoStream   = 0;
+    static constexpr int kSecondaryVideoStream  = 1;
     double aspectRatio() const;
     double hfov() const;
     double thermalAspectRatio() const;
@@ -81,6 +87,7 @@ public:
 signals:
     void aspectRatioChanged();
     void autoStreamConfiguredChanged();
+    void activeVideoStreamChanged();
     void decodingChanged();
     void fullScreenChanged();
     void hasVideoChanged();
@@ -135,6 +142,7 @@ private:
     bool _initialized = false;
     bool _gstreamerDisabledForUnitTests = false;
     bool _fullScreen = false;
+    int  _activeVideoStream = 0;
 
     QAtomicInteger<bool> _decoding = false;
     QAtomicInteger<bool> _recording = false;

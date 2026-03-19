@@ -11,6 +11,7 @@ SettingsPage {
     property var    _videoManager:              QGroundControl.videoManager
     property var    _videoSettings:             _settingsManager.videoSettings
     property string _videoSource:               _videoSettings.videoSource.rawValue
+    property string _secondaryVideoSource:      _videoSettings.secondaryVideoSource.rawValue
     property bool   _isGST:                     _videoManager.gstreamerEnabled
     property bool   _isStreamSource:            _videoManager.isStreamSource
     property bool   _isUDP264:                  _isStreamSource && (_videoSource === _videoSettings.udp264VideoSource)
@@ -22,6 +23,14 @@ SettingsPage {
     property bool   _videoSourceDisabled:       _videoSource === _videoSettings.disabledVideoSource
     property real   _urlFieldWidth:             ScreenTools.defaultFontPixelWidth * 40
     property bool   _requiresUDPUrl:            _isUDP264 || _isUDP265 || _isMPEGTS
+
+    property bool   _secondaryIsRTSP:           _secondaryVideoSource === _videoSettings.rtspVideoSource
+    property bool   _secondaryIsTCP:            _secondaryVideoSource === _videoSettings.tcpVideoSource
+    property bool   _secondaryIsUDP264:         _secondaryVideoSource === _videoSettings.udp264VideoSource
+    property bool   _secondaryIsUDP265:         _secondaryVideoSource === _videoSettings.udp265VideoSource
+    property bool   _secondaryIsMPEGTS:         _secondaryVideoSource === _videoSettings.mpegtsVideoSource
+    property bool   _secondaryDisabled:         _secondaryVideoSource === _videoSettings.disabledVideoSource
+    property bool   _secondaryRequiresUDPUrl:   _secondaryIsUDP264 || _secondaryIsUDP265 || _secondaryIsMPEGTS
 
     SettingsGroupLayout {
         Layout.fillWidth:   true
@@ -65,6 +74,50 @@ SettingsPage {
             label:                      qsTr("UDP URL")
             fact:                       _videoSettings.udpUrl
             visible:                    _requiresUDPUrl && _videoSettings.udpUrl.visible
+        }
+    }
+
+    SettingsGroupLayout {
+        Layout.fillWidth:   true
+        heading:            qsTr("Secondary Video Source")
+        visible:            !_videoAutoStreamConfig
+
+        LabelledFactComboBox {
+            Layout.fillWidth:   true
+            label:              qsTr("Source")
+            indexModel:         false
+            fact:               _videoSettings.secondaryVideoSource
+            visible:            fact.visible
+        }
+    }
+
+    SettingsGroupLayout {
+        Layout.fillWidth:   true
+        heading:            qsTr("Secondary Connection")
+        visible:            !_secondaryDisabled && !_videoAutoStreamConfig && (_secondaryIsTCP || _secondaryIsRTSP || _secondaryRequiresUDPUrl)
+
+        LabelledFactTextField {
+            Layout.fillWidth:           true
+            textFieldPreferredWidth:    _urlFieldWidth
+            label:                      qsTr("RTSP URL")
+            fact:                       _videoSettings.secondaryRtspUrl
+            visible:                    _secondaryIsRTSP && _videoSettings.secondaryRtspUrl.visible
+        }
+
+        LabelledFactTextField {
+            Layout.fillWidth:           true
+            label:                      qsTr("TCP URL")
+            textFieldPreferredWidth:    _urlFieldWidth
+            fact:                       _videoSettings.secondaryTcpUrl
+            visible:                    _secondaryIsTCP && _videoSettings.secondaryTcpUrl.visible
+        }
+
+        LabelledFactTextField {
+            Layout.fillWidth:           true
+            textFieldPreferredWidth:    _urlFieldWidth
+            label:                      qsTr("UDP URL")
+            fact:                       _videoSettings.secondaryUdpUrl
+            visible:                    _secondaryRequiresUDPUrl && _videoSettings.secondaryUdpUrl.visible
         }
     }
 

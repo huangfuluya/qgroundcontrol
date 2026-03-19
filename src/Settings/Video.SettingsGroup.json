@@ -32,6 +32,34 @@
     "default":     ""
 },
 {
+    "name":             "secondaryVideoSource",
+    "shortDesc": "Secondary video source",
+    "longDesc":  "Source for the secondary video stream.",
+    "type":             "string",
+    "default":     ""
+},
+{
+    "name":             "secondaryUdpUrl",
+    "shortDesc": "Secondary Video UDP Url",
+    "longDesc":  "UDP url address and port to bind to for the secondary video stream. Example: 0.0.0.0:5601",
+    "type":             "string",
+    "default":     "0.0.0.0:5601"
+},
+{
+    "name":             "secondaryRtspUrl",
+    "shortDesc": "Secondary Video RTSP Url",
+    "longDesc":  "RTSP url address and port to bind to for the secondary video stream. Example: rtsp://192.168.42.1:554/live",
+    "type":             "string",
+    "default":     ""
+},
+{
+    "name":             "secondaryTcpUrl",
+    "shortDesc": "Secondary Video TCP Url",
+    "longDesc":  "TCP url address and port to bind to for the secondary video stream. Example: 192.168.143.200:3002",
+    "type":             "string",
+    "default":     ""
+},
+{
     "name":             "videoSavePath",
     "shortDesc": "Video save directory",
     "longDesc":  "Directory to save videos to.",

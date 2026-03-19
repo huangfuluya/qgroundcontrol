@@ -17,6 +17,10 @@ public:
     DEFINE_SETTINGFACT(udpUrl)
     DEFINE_SETTINGFACT(tcpUrl)
     DEFINE_SETTINGFACT(rtspUrl)
+    DEFINE_SETTINGFACT(secondaryVideoSource)
+    DEFINE_SETTINGFACT(secondaryUdpUrl)
+    DEFINE_SETTINGFACT(secondaryTcpUrl)
+    DEFINE_SETTINGFACT(secondaryRtspUrl)
     DEFINE_SETTINGFACT(aspectRatio)
     DEFINE_SETTINGFACT(videoFit)
     DEFINE_SETTINGFACT(gridLines)
@@ -30,7 +34,8 @@ public:
     DEFINE_SETTINGFACT(lowLatencyMode)
     DEFINE_SETTINGFACT(forceVideoDecoder)
 
-    Q_PROPERTY(bool     streamConfigured        READ streamConfigured       NOTIFY streamConfiguredChanged)
+    Q_PROPERTY(bool     streamConfigured            READ streamConfigured           NOTIFY streamConfiguredChanged)
+    Q_PROPERTY(bool     secondaryStreamConfigured   READ secondaryStreamConfigured  NOTIFY secondaryStreamConfiguredChanged)
     Q_PROPERTY(QString  rtspVideoSource         READ rtspVideoSource        CONSTANT)
     Q_PROPERTY(QString  udp264VideoSource       READ udp264VideoSource      CONSTANT)
     Q_PROPERTY(QString  udp265VideoSource       READ udp265VideoSource      CONSTANT)
@@ -39,6 +44,7 @@ public:
     Q_PROPERTY(QString  disabledVideoSource     READ disabledVideoSource    CONSTANT)
 
     bool     streamConfigured       ();
+    bool     secondaryStreamConfigured();
     QString  rtspVideoSource        () { return videoSourceRTSP; }
     QString  udp264VideoSource      () { return videoSourceUDPH264; }
     QString  udp265VideoSource      () { return videoSourceUDPH265; }
@@ -60,7 +66,8 @@ public:
     static constexpr const char* videoSourceHerelinkHotspot   = QT_TRANSLATE_NOOP("VideoSettings", "Herelink Hotspot");
 
 signals:
-    void streamConfiguredChanged    (bool configured);
+    void streamConfiguredChanged            (bool configured);
+    void secondaryStreamConfiguredChanged   (bool configured);
 
 private slots:
     void _configChanged             (QVariant value);
