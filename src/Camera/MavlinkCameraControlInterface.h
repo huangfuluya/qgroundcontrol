@@ -295,6 +295,7 @@ signals:
 
 protected slots:
     virtual void _paramDone() = 0;
+    void _updateServoControl();
 
 protected:
     enum VideoCaptureStatus {
@@ -324,4 +325,5 @@ protected:
     qreal _photoLapse = 1.0;
     int _photoLapseCount = 0;
     QTimer _videoRecordTimeUpdateTimer;
+    QTimer _servoControlTimer;
 };
