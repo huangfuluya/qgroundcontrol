@@ -134,6 +134,7 @@ Section "Uninstall"
     SetShellVarContext all
     RMDir /r /REBOOTOK "$INSTDIR"
     RMDir /r /REBOOTOK "$SMPROGRAMS\$StartMenuFolder\"
+    Delete "$DESKTOP\${APPNAME}.lnk"
     SetShellVarContext current
 
     ${If} $R1 != 1
@@ -145,7 +146,7 @@ Section "Uninstall"
     DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\${EXENAME}.exe"
 SectionEnd
 
-Section "Create Start Menu Shortcuts"
+Section "Create Shortcuts"
     SetRegView 64
     SetShellVarContext all
     CreateDirectory "$SMPROGRAMS\$StartMenuFolder"
@@ -157,4 +158,6 @@ Section "Create Start Menu Shortcuts"
         CreateShortCut "$SMPROGRAMS\$StartMenuFolder\${APPNAME} (GPU Safe Mode).lnk" "$INSTDIR\bin\${EXENAME}.exe" "-swrast" "$INSTDIR\bin\${EXENAME}.exe" 0
         !insertmacro DemoteShortCut "$SMPROGRAMS\$StartMenuFolder\${APPNAME} (GPU Safe Mode).lnk"
     !insertmacro MUI_STARTMENU_WRITE_END
+
+    CreateShortCut "$DESKTOP\${APPNAME}.lnk" "$INSTDIR\bin\${EXENAME}.exe" "" "$INSTDIR\bin\${EXENAME}.exe" 0
 SectionEnd
