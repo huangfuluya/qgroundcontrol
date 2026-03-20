@@ -1066,12 +1066,26 @@ void Joystick::_startPollingForVehicle(Vehicle &vehicle)
         return;
     }
     if (_currentPollingType == NotPolling && isRunning()) {
-        qCWarning(JoystickLog) << "Internal Error: Joystick polling should not be running!";
+        // The joystick thread is still winding down (_exitThread was set but the thread hasn't
+        // finished yet). Defer the restart until the thread has fully exited to avoid a race
+        // condition where start() is called on an already-running thread.
+        qCDebug(JoystickLog) << "Joystick thread still stopping, deferring start until thread finishes";
+        // Use this as the context so the connection is automatically cleaned up if this is destroyed.
+        // Check the enabled state at callback time in case the user disabled again before the thread stopped.
+        (void) QObject::connect(this, &QThread::finished, this, [this]() {
+            if (JoystickManager::instance()->activeJoystickEnabledForActiveVehicle()) {
+                _startPollingForActiveVehicle();
+            }
+        }, Qt::SingleShotConnection);
         return;
     }
 
     _currentPollingType = PollingForVehicle;
     _pollingVehicle = &vehicle;
+
+    // Reset exit flag so the new thread actually runs its polling loop.
+    // This flag may still be true from a previous _stopAllPolling() call.
+    _exitThread = false;
 
     _buildAvailableButtonsActionList(_pollingVehicle);
 
@@ -1117,6 +1131,9 @@ void Joystick::_startPollingForConfiguration()
     _currentPollingType = PollingForConfiguration;
 
     if (!isRunning()) {
+        // Reset exit flag so the new thread actually runs its polling loop.
+        // This flag may still be true from a previous _stopAllPolling() call.
+        _exitThread = false;
         start();
     }
 }
