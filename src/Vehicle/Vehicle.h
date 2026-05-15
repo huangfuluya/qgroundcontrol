@@ -345,6 +345,9 @@ public:
     /// Command vichecle to retract landing gear
     Q_INVOKABLE void landingGearRetract();
 
+    /// Set RC channel 14 to high (2000) then reset to low (1000) after 1 second
+    Q_INVOKABLE void setRC14High();
+
     Q_INVOKABLE void startTakeoff();
 
     Q_INVOKABLE void startMission();

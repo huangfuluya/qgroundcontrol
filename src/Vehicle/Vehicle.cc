@@ -2312,6 +2312,23 @@ void Vehicle::landingGearRetract()
                 1.0f);      // up
 }
 
+void Vehicle::setRC14High()
+{
+    sendMavCommand(
+                defaultComponentId(),
+                MAV_CMD_DO_SET_SERVO,
+                true,       // show error if fails
+                14.0f,      // servo/channel number (RC channel 14)
+                2000.0f);   // PWM high value
+    sendMavCommandDelayed(
+                defaultComponentId(),
+                MAV_CMD_DO_SET_SERVO,
+                true,       // show error if fails
+                1000,       // delay 1 second
+                14.0f,      // servo/channel number (RC channel 14)
+                1000.0f);   // PWM low value
+}
+
 void Vehicle::setCurrentMissionSequence(int seq)
 {
     if (!_firmwarePlugin->sendHomePositionToVehicle()) {
