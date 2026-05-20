@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
-    <Name>@CMAKE_PROJECT_NAME@</Name>
+    <Name>@QGC_APP_NAME@</Name>
     <Version>@CMAKE_PROJECT_VERSION@</Version>
     <ReleaseDate>@QGC_APP_DATE@</ReleaseDate>
     <Title>@QGC_INSTALLER_NAME@</Title>
@@ -10,7 +10,7 @@
     <InstallerWindowIcon>windowicon</InstallerWindowIcon>
     <Banner>installheader</Banner>
     <WizardStyle>Modern</WizardStyle>
-    <StartMenuDir>@CMAKE_PROJECT_NAME@</StartMenuDir>
+    <StartMenuDir>@QGC_APP_NAME@</StartMenuDir>
     <TargetDir>@HomeDir@/@CMAKE_PROJECT_NAME@</TargetDir>
     <AdminTargetDir>@RootDir@/@CMAKE_PROJECT_NAME@</AdminTargetDir>
     <MaintenanceToolName>@CMAKE_PROJECT_NAME@MaintenanceTool</MaintenanceToolName>

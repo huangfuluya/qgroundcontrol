@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package>
-    <DisplayName>@CMAKE_PROJECT_NAME@</DisplayName>
+    <DisplayName>@QGC_APP_NAME@</DisplayName>
     <Description>@CMAKE_PROJECT_DESCRIPTION@</Description>
     <Version>@CMAKE_PROJECT_VERSION@</Version>
     <ReleaseDate>@QGC_APP_DATE@</ReleaseDate>
@@ -10,7 +10,7 @@
     </Licenses>
     <Default>true</Default>
     <Script>installscript.js</Script>
-    <UpdateText>Update @CMAKE_PROJECT_NAME@</UpdateText>
+    <UpdateText>Update @QGC_APP_NAME@</UpdateText>
     <Translations>
         <!-- <Translation>de.qm</Translation> -->
     </Translations>

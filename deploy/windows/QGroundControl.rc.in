@@ -16,12 +16,12 @@ BEGIN
         BLOCK "000004b0"
         BEGIN
             VALUE "CompanyName", "@QGC_ORG_NAME@"
-            VALUE "FileDescription", "@CMAKE_PROJECT_NAME@"
+            VALUE "FileDescription", "@QGC_APP_NAME@"
             VALUE "FileVersion", "@CMAKE_PROJECT_VERSION@"
             VALUE "LegalCopyright", "@QGC_APP_COPYRIGHT@"
             VALUE "InternalName", "@CMAKE_PROJECT_NAME@"
             VALUE "OriginalFilename", "@CMAKE_PROJECT_NAME@.exe"
-            VALUE "ProductName", "@CMAKE_PROJECT_NAME@"
+            VALUE "ProductName", "@QGC_APP_NAME@"
             VALUE "ProductVersion", "@CMAKE_PROJECT_VERSION@"
         END
     END

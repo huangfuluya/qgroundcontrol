@@ -77,7 +77,7 @@ cpack_ifw_configure_component(${CMAKE_PROJECT_NAME}
     ESSENTIAL FORCED_INSTALLATION
     NAME ${CMAKE_PROJECT_NAME}
     VERSION ${CMAKE_PROJECT_VERSION}
-    DESCRIPTION "Welcome to the ${CMAKE_PROJECT_NAME} installer."
+    DESCRIPTION "Welcome to the ${QGC_APP_NAME} installer."
     LICENSES "GPL LICENSE" ${CPACK_RESOURCE_FILE_LICENSE}
     SCRIPT "${CMAKE_SOURCE_DIR}/deploy/installer/packages/org.mavlink.qgroundcontrol/meta/installerscript.js"
 )
