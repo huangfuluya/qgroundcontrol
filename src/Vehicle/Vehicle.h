@@ -993,6 +993,7 @@ private:
     bool _apmArmingNotRequired          ();
     void _initializeCsv                 ();
     void _writeCsvLine                  ();
+    void _logMavlinkMessage             (const mavlink_message_t& message);
     void _flightTimerStart              ();
     void _flightTimerStop               ();
     void _setMessageInterval            (int messageId, int rate);
@@ -1014,6 +1015,8 @@ private:
 
     QTimer              _csvLogTimer;
     QFile               _csvLogFile;
+    QFile               _mavlinkCsvLogFile;
+    int                 _mavlinkCsvMsgCount = 0;
 
     bool            _joystickEnabled = false;
     bool _isActiveVehicle = false;
@@ -1450,6 +1453,23 @@ private:
     void _createMAVLinkLogManager();
 
     MAVLinkLogManager *_mavlinkLogManager = nullptr;
+
+/*===========================================================================*/
+/*                         MAVLink CSV Logger                                */
+/*===========================================================================*/
+public:
+    Q_PROPERTY(bool    mavlinkCsvLogActive      READ mavlinkCsvLogActive       NOTIFY mavlinkCsvLogActiveChanged)
+    Q_PROPERTY(QString mavlinkCsvLogFileName    READ mavlinkCsvLogFileName     NOTIFY mavlinkCsvLogFileNameChanged)
+    Q_PROPERTY(int     mavlinkCsvLogMsgCount    READ mavlinkCsvLogMsgCount     NOTIFY mavlinkCsvLogMsgCountChanged)
+
+    bool    mavlinkCsvLogActive()   const { return _mavlinkCsvLogFile.isOpen(); }
+    QString mavlinkCsvLogFileName() const { return _mavlinkCsvLogFile.fileName(); }
+    int     mavlinkCsvLogMsgCount() const { return _mavlinkCsvMsgCount; }
+
+signals:
+    void mavlinkCsvLogActiveChanged();
+    void mavlinkCsvLogFileNameChanged();
+    void mavlinkCsvLogMsgCountChanged();
 
 /*---------------------------------------------------------------------------*/
 };

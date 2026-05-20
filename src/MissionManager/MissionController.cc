@@ -1225,7 +1225,6 @@ FlightPathSegment* MissionController::_addFlightPathSegment(FlightPathSegmentHas
 
 void MissionController::_recalcROISpecialVisuals(void)
 {
-    return;
     VisualMissionItem*  lastCoordinateItem =    qobject_cast<VisualMissionItem*>(_visualItems->get(0));
     bool                roiActive =             false;
 
@@ -2151,6 +2150,13 @@ int MissionController::resumeMissionIndex(void) const
         if (resumeIndex > 1 && resumeIndex != _visualItems->value<VisualMissionItem*>(_visualItems->count() - 1)->sequenceNumber()) {
             // Resume at the item previous to the item we were heading towards
             resumeIndex--;
+
+            // Missions which end with RTL should not surface Resume Mission.
+            const VisualMissionItem* lastItem = _visualItems->value<VisualMissionItem*>(_visualItems->count() - 1);
+            const SimpleMissionItem* lastSimpleItem = qobject_cast<const SimpleMissionItem*>(lastItem);
+            if (lastSimpleItem && lastSimpleItem->mavCommand() == MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+                resumeIndex = 0;
+            }
         } else {
             resumeIndex = 0;
         }

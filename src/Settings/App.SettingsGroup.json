@@ -254,6 +254,13 @@
     "shortDesc": "AirLink Password",
     "type": "string",
     "default": ""
+},
+{
+    "name":                 "showAdvancedUI",
+    "shortDesc":            "显示高级模式",
+    "longDesc":             "启用后显示完整的专业功能界面，包括载具配置、分析工具、系统设置、固件升级、校准和调试信息。禁用后使用简化的基础操作界面。",
+    "type":                 "bool",
+    "default":              false
 }
 ]
 }

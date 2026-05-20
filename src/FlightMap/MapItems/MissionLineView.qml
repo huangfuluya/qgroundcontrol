@@ -19,10 +19,9 @@ MapItemView {
     property bool showSpecialVisual: false
     delegate: MapPolyline {
         line.width: 3
-        // Note: Special visuals for ROI are hacked out for now since they are not working correctly
         line.color: _terrainCollision ?
                         "red" :
-                        (false/*showSpecialVisual*/ ? "green" : QGroundControl.globalPalette.mapMissionTrajectory)
+                        (_showSpecialVisual ? "green" : QGroundControl.globalPalette.mapMissionTrajectory)
         z:          QGroundControl.zOrderWaypointLines
         path:       _calcMissionLinePath()
 

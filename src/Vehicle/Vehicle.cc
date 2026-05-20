@@ -188,6 +188,9 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(&_csvLogTimer, &QTimer::timeout, this, &Vehicle::_writeCsvLine);
     _csvLogTimer.start(1000);
 
+    // Start raw MAVLink message CSV logger
+    connect(this, &Vehicle::mavlinkMessageReceived, this, &Vehicle::_logMavlinkMessage);
+
     // Start timer to limit altitude above terrain queries
     _altitudeAboveTerrQueryTimer.restart();
 }
@@ -651,9 +654,11 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
         _handleMessageInterval(message);
         break;
     }
+#ifdef MAVLINK_MSG_ID_CONTROL_STATUS
     case MAVLINK_MSG_ID_CONTROL_STATUS:
         _handleControlStatus(message);
-        break;   
+        break;
+#endif
     case MAVLINK_MSG_ID_COMMAND_LONG:
         _handleCommandLong(message);
         break;
@@ -3658,6 +3663,139 @@ void Vehicle::_writeCsvLine()
     stream << allFactValues.join(",") << "\n";
 }
 
+void Vehicle::_logMavlinkMessage(const mavlink_message_t& message)
+{
+    if (!_mavlinkCsvLogFile.isOpen()) {
+        QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd hh-mm-ss");
+        QString fileName = QString("%1 vehicle%2_mavlink.csv").arg(now).arg(_id);
+        QDir saveDir(SettingsManager::instance()->appSettings()->telemetrySavePath());
+        _mavlinkCsvLogFile.setFileName(saveDir.absoluteFilePath(fileName));
+
+        if (!_mavlinkCsvLogFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            qCWarning(VehicleLog) << "Unable to open MAVLink CSV log file";
+            return;
+        }
+
+        QTextStream headerStream(&_mavlinkCsvLogFile);
+        headerStream << "Timestamp,MsgID,MsgName,SysID,CompID,"
+                     << "Field1,Field2,Field3,Field4,Field5,Field6,Field7,Field8\n";
+        _mavlinkCsvMsgCount = 0;
+        emit mavlinkCsvLogActiveChanged();
+        emit mavlinkCsvLogFileNameChanged();
+    }
+
+    QTextStream stream(&_mavlinkCsvLogFile);
+    QString timestamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz"));
+    QString msgName;
+    QStringList fields;
+
+    switch (message.msgid) {
+    case MAVLINK_MSG_ID_HEARTBEAT: {
+        msgName = "HEARTBEAT";
+        mavlink_heartbeat_t hb;
+        mavlink_msg_heartbeat_decode(&message, &hb);
+        fields << QString::number(hb.type)
+               << QString::number(hb.autopilot)
+               << QString::number(hb.base_mode)
+               << QString::number(hb.custom_mode);
+        break;
+    }
+    case MAVLINK_MSG_ID_SYS_STATUS: {
+        msgName = "SYS_STATUS";
+        mavlink_sys_status_t sys;
+        mavlink_msg_sys_status_decode(&message, &sys);
+        fields << QString::number(sys.voltage_battery)
+               << QString::number(sys.current_battery)
+               << QString::number(sys.battery_remaining)
+               << QString::number(sys.load);
+        break;
+    }
+    case MAVLINK_MSG_ID_GPS_RAW_INT: {
+        msgName = "GPS_RAW_INT";
+        mavlink_gps_raw_int_t gps;
+        mavlink_msg_gps_raw_int_decode(&message, &gps);
+        fields << QString::number(gps.fix_type)
+               << QString::number(gps.lat)
+               << QString::number(gps.lon)
+               << QString::number(gps.alt)
+               << QString::number(gps.satellites_visible);
+        break;
+    }
+    case MAVLINK_MSG_ID_SCALED_PRESSURE: {
+        msgName = "SCALED_PRESSURE";
+        mavlink_scaled_pressure_t sp;
+        mavlink_msg_scaled_pressure_decode(&message, &sp);
+        fields << QString::number(sp.press_abs, 'f', 2)
+               << QString::number(sp.temperature / 100.0, 'f', 1);
+        break;
+    }
+    case MAVLINK_MSG_ID_ATTITUDE: {
+        msgName = "ATTITUDE";
+        mavlink_attitude_t att;
+        mavlink_msg_attitude_decode(&message, &att);
+        fields << QString::number(att.roll, 'f', 4)
+               << QString::number(att.pitch, 'f', 4)
+               << QString::number(att.yaw, 'f', 4);
+        break;
+    }
+    case MAVLINK_MSG_ID_GLOBAL_POSITION_INT: {
+        msgName = "GLOBAL_POSITION_INT";
+        mavlink_global_position_int_t gpos;
+        mavlink_msg_global_position_int_decode(&message, &gpos);
+        fields << QString::number(gpos.lat)
+               << QString::number(gpos.lon)
+               << QString::number(gpos.alt)
+               << QString::number(gpos.relative_alt)
+               << QString::number(gpos.vx)
+               << QString::number(gpos.vy)
+               << QString::number(gpos.vz)
+               << QString::number(gpos.hdg);
+        break;
+    }
+    case MAVLINK_MSG_ID_VFR_HUD: {
+        msgName = "VFR_HUD";
+        mavlink_vfr_hud_t hud;
+        mavlink_msg_vfr_hud_decode(&message, &hud);
+        fields << QString::number(hud.airspeed, 'f', 1)
+               << QString::number(hud.groundspeed, 'f', 1)
+               << QString::number(hud.heading)
+               << QString::number(hud.throttle)
+               << QString::number(hud.alt, 'f', 1)
+               << QString::number(hud.climb, 'f', 1);
+        break;
+    }
+    case MAVLINK_MSG_ID_BATTERY_STATUS: {
+        msgName = "BATTERY_STATUS";
+        mavlink_battery_status_t bat;
+        mavlink_msg_battery_status_decode(&message, &bat);
+        fields << QString::number(bat.temperature)
+               << QString::number(bat.voltages[0])
+               << QString::number(bat.current_consumed)
+               << QString::number(bat.battery_remaining);
+        break;
+    }
+    default:
+        msgName = QString("ID_%1").arg(message.msgid);
+        break;
+    }
+
+    // Pad fields to 8 columns
+    while (fields.size() < 8) fields << "";
+
+    stream << timestamp << ","
+           << message.msgid << ","
+           << msgName << ","
+           << message.sysid << ","
+           << message.compid << ","
+           << fields.join(",") << "\n";
+
+    stream.flush();
+    _mavlinkCsvMsgCount++;
+    if (_mavlinkCsvMsgCount % 100 == 0) {
+        emit mavlinkCsvLogMsgCountChanged();
+    }
+}
+
 void Vehicle::doSetHome(const QGeoCoordinate& coord)
 {
     if (coord.isValid()) {
@@ -4019,6 +4157,7 @@ void Vehicle::startTimerRevertAllowTakeover()
 
 void Vehicle::requestOperatorControl(bool allowOverride, int requestTimeoutSecs)
 {
+#ifdef MAVLINK_MSG_ID_CONTROL_STATUS
     int safeRequestTimeoutSecs;
     int requestTimeoutSecsMin = SettingsManager::instance()->flyViewSettings()->requestControlTimeout()->cookedMin().toInt();
     int requestTimeoutSecsMax = SettingsManager::instance()->flyViewSettings()->requestControlTimeout()->cookedMax().toInt();
@@ -4044,6 +4183,11 @@ void Vehicle::requestOperatorControl(bool allowOverride, int requestTimeoutSecs)
     if (requestTimeoutSecs > 0) {
         requestOperatorControlStartTimer(requestTimeoutSecs * 1000);
     }
+#else
+    Q_UNUSED(allowOverride)
+    Q_UNUSED(requestTimeoutSecs)
+    qCWarning(VehicleLog) << "Operator control is not supported by the local MAVLink headers";
+#endif
 }
 
 void Vehicle::_requestOperatorControlAckHandler(void* resultHandlerData, int compId, const mavlink_command_ack_t& ack, MavCmdResultFailureCode_t failureCode)
@@ -4095,6 +4239,7 @@ void Vehicle::requestOperatorControlStartTimer(int requestTimeoutMsecs)
 
 void Vehicle::_handleControlStatus(const mavlink_message_t& message)
 {
+#ifdef MAVLINK_MSG_ID_CONTROL_STATUS
     mavlink_control_status_t controlStatus;
     mavlink_msg_control_status_decode(&message, &controlStatus);
 
@@ -4127,6 +4272,9 @@ void Vehicle::_handleControlStatus(const mavlink_message_t& message)
         _sendControlRequestAllowed = true;
         emit sendControlRequestAllowedChanged(true);
     }
+#else
+    Q_UNUSED(message)
+#endif
 }
 
 void Vehicle::_handleCommandRequestOperatorControl(const mavlink_command_long_t commandLong)
@@ -4142,9 +4290,11 @@ void Vehicle::_handleCommandLong(const mavlink_message_t& message)
     if (commandLong.target_system != MAVLinkProtocol::instance()->getSystemId()) {
         return;
     }
+#ifdef MAVLINK_MSG_ID_CONTROL_STATUS
     if (commandLong.command == MAV_CMD_REQUEST_OPERATOR_CONTROL) {
         _handleCommandRequestOperatorControl(commandLong);
     }
+#endif
 }
 
 int Vehicle::operatorControlTakeoverTimeoutMsecs() const

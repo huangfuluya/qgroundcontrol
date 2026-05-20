@@ -94,6 +94,7 @@ Item {
         FlyViewMap {
             id:                     mapControl
             planMasterController:   _planController
+            guidedController:       _guidedController
             rightPanelWidth:        ScreenTools.defaultFontPixelHeight * 9
             pipView:                _pipView
             pipMode:                !_mainWindowIsMap

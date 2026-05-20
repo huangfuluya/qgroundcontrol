@@ -100,6 +100,73 @@ Rectangle {
     }
 
     //-------------------------------------------------------------------------
+    //-- Mode Switch (Basic / Advanced)
+    RowLayout {
+        id:                     modeSwitchRow
+        anchors.right:          parent.right
+        anchors.top:            parent.top
+        anchors.bottom:         parent.bottom
+        anchors.rightMargin:    ScreenTools.defaultFontPixelWidth
+        spacing:                ScreenTools.defaultFontPixelWidth / 2
+        visible:                true
+
+        QGCLabel {
+            text:               QGroundControl.corePlugin.showAdvancedUI ? qsTr("高级") : qsTr("基础")
+            font.pointSize:     ScreenTools.defaultFontPointSize
+            color:              qgcPal.buttonText
+        }
+
+        QGCSwitch {
+            id:                 modeSwitch
+            checked:            QGroundControl.corePlugin.showAdvancedUI
+            onCheckedChanged: {
+                if (checked !== QGroundControl.corePlugin.showAdvancedUI) {
+                    if (checked) {
+                        advancedModeConfirmation.open()
+                    } else {
+                        basicModeConfirmation.open()
+                    }
+                }
+            }
+        }
+
+        MessageDialog {
+            id:                 advancedModeConfirmation
+            title:              qsTr("切换至高级模式")
+            text:               QGroundControl.corePlugin.showAdvancedUIMessage
+            buttons:            MessageDialog.Yes | MessageDialog.No
+            onButtonClicked: function (button, role) {
+                if (button === MessageDialog.Yes) {
+                    QGroundControl.corePlugin.showAdvancedUI = true
+                } else {
+                    modeSwitch.checked = false
+                }
+            }
+        }
+
+        MessageDialog {
+            id:                 basicModeConfirmation
+            title:              qsTr("切换至基础模式")
+            text:               QGroundControl.corePlugin.showBasicUIMessage
+            buttons:            MessageDialog.Yes | MessageDialog.No
+            onButtonClicked: function (button, role) {
+                if (button === MessageDialog.Yes) {
+                    QGroundControl.corePlugin.showAdvancedUI = false
+                } else {
+                    modeSwitch.checked = true
+                }
+            }
+        }
+
+        Connections {
+            target: QGroundControl.corePlugin
+            function onShowAdvancedUIChanged(show) {
+                modeSwitch.checked = show
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------
     //-- Branding Logo
     Image {
         anchors.right:          parent.right

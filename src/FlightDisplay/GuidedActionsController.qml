@@ -159,7 +159,7 @@ Item {
     property bool showOrbit:                _guidedActionsEnabled && _vehicleFlying && __orbitSupported && !_missionActive && _activeVehicle.homePosition.isValid && !isNaN(_activeVehicle.homePosition.altitude)
     property bool showROI:                  _guidedActionsEnabled && _vehicleFlying && __roiSupported
     property bool showLandAbort:            _guidedActionsEnabled && _vehicleFlying && _fixedWingOnApproach
-    property bool showGotoLocation:         _guidedActionsEnabled && _vehicleFlying
+    property bool showGotoLocation:         _guidedActionsEnabled && (_vehicleFlying || _vehicleArmed)
     property bool showSetHome:              _guidedActionsEnabled
     property bool showGripper:              _initialConnectComplete ? _activeVehicle.hasGripper : false
     property bool showSetEstimatorOrigin:   _activeVehicle && !(_activeVehicle.sensorsPresentBits & Vehicle.SysStatusSensorGPS)
@@ -168,10 +168,9 @@ Item {
     property string changeSpeedTitle:   _vehicleInFwdFlight ? changeAirspeedTitle : changeCruiseSpeedTitle
     property string changeSpeedMessage: _vehicleInFwdFlight ? changeAirspeedMessage : changeCruiseSpeedMessage
 
-    // Note: The '_missionItemCount - 2' is a hack to not trigger resume mission when a mission ends with an RTL item
-    property bool showResumeMission:    _activeVehicle && !_vehicleArmed && _vehicleWasFlying && _missionAvailable && _resumeMissionIndex > 0 && (_resumeMissionIndex < _missionItemCount - 2)
+    property bool showResumeMission:    _activeVehicle && !_vehicleArmed && _vehicleWasFlying && _missionAvailable && _resumeMissionIndex > 0
 
-    property bool guidedUIVisible:          confirmDialog.visible
+    property bool guidedUIVisible:          confirmDialog ? confirmDialog.visible : false
 
     property var    _corePlugin:            QGroundControl.corePlugin
     property var    _corePluginOptions:     QGroundControl.corePlugin.options
@@ -400,8 +399,8 @@ Item {
     }
 
     function closeAll() {
-        confirmDialog.visible = false
-        guidedValueSlider.visible = false
+        if (confirmDialog) confirmDialog.visible = false
+        if (guidedValueSlider) guidedValueSlider.visible = false
     }
 
     // Called when an action is about to be executed in order to confirm

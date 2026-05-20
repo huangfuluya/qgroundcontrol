@@ -441,6 +441,10 @@ bool SerialLink::_connect()
 
 void SerialLink::disconnect()
 {
+    if (!isConnected()) {
+        return;
+    }
+
     (void) QMetaObject::invokeMethod(_worker, "disconnectFromPort", Qt::QueuedConnection);
 }
 

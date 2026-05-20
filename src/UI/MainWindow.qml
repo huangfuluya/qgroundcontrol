@@ -80,8 +80,12 @@ ApplicationWindow {
         readonly property var       activeVehicle:                  QGroundControl.multiVehicleManager.activeVehicle
         readonly property real      defaultTextHeight:              ScreenTools.defaultFontPixelHeight
         readonly property real      defaultTextWidth:               ScreenTools.defaultFontPixelWidth
-        readonly property var       planMasterControllerFlyView:    flyView.planController
-        readonly property var       guidedControllerFlyView:        flyView.guidedController
+        readonly property var       planMasterControllerFlyView:    QGroundControl.corePlugin.showAdvancedUI
+                                                                    ? flyView.planController
+                                                                    : (basicModeView.item ? basicModeView.item.planControllerFlyView : flyView.planController)
+        readonly property var       guidedControllerFlyView:        QGroundControl.corePlugin.showAdvancedUI
+                                                                    ? flyView.guidedController
+                                                                    : (basicModeView.item ? basicModeView.item.guidedControllerFlyView : flyView.guidedController)
 
         // Number of QGCTextField's with validation errors. Used to prevent closing panels with validation errors.
         property int                validationErrorCount:           0 
@@ -134,14 +138,17 @@ ApplicationWindow {
     }
 
     function showAnalyzeTool() {
+        if (!QGroundControl.corePlugin.showAdvancedUI) return
         showTool(qsTr("Analyze Tools"), "qrc:/qml/QGroundControl/AnalyzeView/AnalyzeView.qml", "/qmlimages/Analyze.svg")
     }
 
     function showVehicleConfig() {
+        if (!QGroundControl.corePlugin.showAdvancedUI) return
         showTool(qsTr("Vehicle Configuration"), "qrc:/qml/QGroundControl/VehicleSetup/SetupView.qml", "/qmlimages/Gears.svg")
     }
 
     function showVehicleConfigParametersPage() {
+        if (!QGroundControl.corePlugin.showAdvancedUI) return
         showVehicleConfig()
         toolDrawerLoader.item.showParametersPanel()
     }
@@ -155,6 +162,7 @@ ApplicationWindow {
     }
 
     function showSettingsTool(settingsPage = "") {
+        if (!QGroundControl.corePlugin.showAdvancedUI) return
         showTool(qsTr("Application Settings"), "qrc:/qml/QGroundControl/Controls/AppSettings.qml", "/res/QGCLogoWhite")
         if (settingsPage !== "") {
             toolDrawerLoader.item.showSettingsPage(settingsPage)
@@ -263,20 +271,31 @@ ApplicationWindow {
         color:          QGroundControl.globalPalette.window
     }
 
+    // Basic Mode View - simplified three-tab interface
+    Loader {
+        id:                     basicModeView
+        anchors.fill:           parent
+        source:                 "qrc:/qml/QGroundControl/BasicMode/BasicModeView.qml"
+        active:                 !QGroundControl.corePlugin.showAdvancedUI
+        visible:                !QGroundControl.corePlugin.showAdvancedUI
+    }
+
+    // Advanced Mode - original FlyView + PlanView
     FlyView { 
         id:                     flyView
         anchors.fill:           parent
         utmspSendActTrigger:    _utmspSendActTrigger
+        visible:                QGroundControl.corePlugin.showAdvancedUI
     }
 
     PlanView {
         id:             planView
         anchors.fill:   parent
-        visible:        false
+        visible:        QGroundControl.corePlugin.showAdvancedUI ? false : false  // shown only via showPlanView()
     }
 
     footer: LogReplayStatusBar {
-        visible: QGroundControl.settingsManager.flyViewSettings.showLogReplayStatusBar.rawValue
+        visible: QGroundControl.settingsManager.flyViewSettings.showLogReplayStatusBar.rawValue && QGroundControl.corePlugin.showAdvancedUI
     }
 
     MessageDialog {
@@ -300,8 +319,8 @@ ApplicationWindow {
 
     MessageDialog {
         id:                 advancedModeOffConfirmation
-        title:              qsTr("Advanced Mode")
-        text:               qsTr("Turn off Advanced Mode?")
+        title:              qsTr("切换到基础模式")
+        text:               QGroundControl.corePlugin.showBasicUIMessage
         buttons:            MessageDialog.Yes | MessageDialog.No
         onButtonClicked: function (button, role) {
             if (button === MessageDialog.Yes) {
@@ -370,6 +389,7 @@ ApplicationWindow {
                             Layout.fillWidth:   true
                             text:               qsTr("Vehicle Configuration")
                             imageResource:      "/qmlimages/Gears.svg"
+                            visible:            QGroundControl.corePlugin.showAdvancedUI
                             onClicked: {
                                 if (mainWindow.allowViewSwitch()) {
                                     mainWindow.closeIndicatorDrawer()
@@ -385,7 +405,7 @@ ApplicationWindow {
                             text:               qsTr("Application Settings")
                             imageResource:      "/res/QGCLogoFull.svg"
                             imageColor:         "transparent"
-                            visible:            !QGroundControl.corePlugin.options.combineSettingsAndSetup
+                            visible:            !QGroundControl.corePlugin.options.combineSettingsAndSetup && QGroundControl.corePlugin.showAdvancedUI
                             onClicked: {
                                 if (mainWindow.allowViewSwitch()) {
                                     drawer.close()

@@ -47,6 +47,7 @@ class QGCCorePlugin : public QObject
     Q_PROPERTY(QString brandImageIndoor                 READ brandImageIndoor                                               CONSTANT)
     Q_PROPERTY(QString brandImageOutdoor                READ brandImageOutdoor                                              CONSTANT)
     Q_PROPERTY(QString showAdvancedUIMessage            READ showAdvancedUIMessage                                          CONSTANT)
+    Q_PROPERTY(QString showBasicUIMessage               READ showBasicUIMessage                                             CONSTANT)
     Q_PROPERTY(QVariantList analyzePages                READ analyzePages                                                   CONSTANT)
     Q_PROPERTY(QVariantList toolBarIndicators           READ toolBarIndicators                                              CONSTANT)
 
@@ -57,7 +58,7 @@ public:
     static QGCCorePlugin *instance();
     static void registerQmlTypes();
 
-    virtual void init() { }
+    virtual void init();
     virtual void cleanup() { }
 
     /// The list of pages/buttons under the Analyze Menu
@@ -89,8 +90,11 @@ public:
     /// Return the resource file which contains the brand image for for Outdoor theme.
     virtual QString brandImageOutdoor() const { return QString(); }
 
-    /// @return The message to show to the user when they a re prompted to confirm turning on advanced ui.
+    /// @return The message to show to the user when they are prompted to confirm turning on advanced ui.
     virtual QString showAdvancedUIMessage() const;
+
+    /// @return The message to show to the user when they are prompted to confirm turning off advanced ui.
+    virtual QString showBasicUIMessage() const;
 
     /// @return An instance of an alternate position source (or NULL if not available)
     virtual QGeoPositionInfoSource *createPositionSource(QObject *parent) { Q_UNUSED(parent); return nullptr; }
@@ -202,7 +206,7 @@ signals:
 
 protected:
     bool _showTouchAreas = false;
-    bool _showAdvancedUI = true;
+    bool _showAdvancedUI = false;
 
 private:
     void _setShowTouchAreas(bool show);

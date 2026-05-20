@@ -31,6 +31,7 @@ Slider {
 
     property real _implicitBarLength:   Math.round(ScreenTools.defaultFontPixelWidth * 20)
     property real _barHeight:           Math.round(ScreenTools.defaultFontPixelHeight / 3)
+    property int _tickmarkCount:        tickmarksEnabled && stepSize > 0 ? Math.max(2, Math.floor(Math.abs(to - from) / stepSize) + 1) : 0
 
     background: Rectangle {
         x:              control.horizontal ? 
@@ -47,31 +48,37 @@ Slider {
         color:          qgcPal.button
         border.width:   1
         border.color:   qgcPal.buttonText
-    }
 
-    // FIXME-QT6: Indicator portion of slider not yet supported
-/*
-        Item {
-            id:     indicatorBar
-            clip:   true
-            visible: indicatorBarVisible
-            x:      control.zeroCentered ? zeroCenteredIndicatorStart : 0
-            width:  control.zeroCentered ? centerIndicatorWidth : control.visualPosition
-            height: parent.height
+        Rectangle {
+            id:                 indicatorBar
+            anchors.verticalCenter: parent.verticalCenter
+            x:                  control.zeroCentered ? zeroCenteredIndicatorStart : 0
+            width:              control.zeroCentered ? centerIndicatorWidth : (control.visualPosition * parent.width)
+            height:             parent.height
+            visible:            control.indicatorBarVisible
+            color:              qgcPal.colorBlue
+            border.color:       Qt.darker(color, 1.2)
+            radius:             parent.radius
+            clip:               true
 
             property real zeroValuePosition:            (Math.abs(control.from) / (control.to - control.from)) * parent.width
-            property real zeroCenteredIndicatorStart:   Math.min(control.visualPosition, zeroValuePosition)
-            property real zeroCenteredIndicatorStop:    Math.max(control.visualPosition, zeroValuePosition)
+            property real zeroCenteredIndicatorStart:   Math.min(control.visualPosition * parent.width, zeroValuePosition)
+            property real zeroCenteredIndicatorStop:    Math.max(control.visualPosition * parent.width, zeroValuePosition)
             property real centerIndicatorWidth:         zeroCenteredIndicatorStop - zeroCenteredIndicatorStart
+        }
 
-            Rectangle {
-                anchors.fill:   parent
-                color:          qgcPal.colorBlue
-                border.color:   Qt.darker(color, 1.2)
-                radius:         height/2
+        Repeater {
+            model: control._tickmarkCount
+
+            delegate: Rectangle {
+                width:  1
+                height: parent.height
+                color:  qgcPal.buttonText
+                opacity: 0.35
+                x: modelData * (parent.width - width) / Math.max(1, control._tickmarkCount - 1)
             }
         }
-    }*/
+    }
 
     handle: Rectangle {
         x:              control.horizontal ? 

@@ -412,6 +412,10 @@ bool BluetoothLink::_connect()
 
 void BluetoothLink::disconnect()
 {
+    if (!isConnected()) {
+        return;
+    }
+
     (void) QMetaObject::invokeMethod(_worker, "disconnectLink", Qt::QueuedConnection);
 }
 

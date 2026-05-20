@@ -35,6 +35,7 @@ FlightMap {
     property Item   pipState:                   _pipState
     property var    rightPanelWidth
     property var    planMasterController
+    property var    guidedController
     property bool   pipMode:                    false   // true: map is shown in a small pip mode
     property var    toolInsets                          // Insets for the center viewport area
 
@@ -46,6 +47,7 @@ FlightMap {
     property real   _toolButtonTopMargin:       parent.height - mainWindow.height + (ScreenTools.defaultFontPixelHeight / 2)
     property real   _toolsMargin:               ScreenTools.defaultFontPixelWidth * 0.75
     property var    _flyViewSettings:           QGroundControl.settingsManager.flyViewSettings
+    property var    _guidedController:          guidedController ? guidedController : _guidedController
     property bool   _keepMapCenteredOnVehicle:  _flyViewSettings.keepMapCenteredOnVehicle.rawValue
 
     property bool   _disableVehicleTracking:    false
@@ -385,7 +387,7 @@ FlightMap {
             // Only allow editing the radius, not the position
             centerDragHandleVisible = false
 
-            globals.guidedControllerFlyView.fwdFlightGotoMapCircle = this
+            _guidedController.fwdFlightGotoMapCircle = this
         }
 
         Binding {
@@ -548,7 +550,7 @@ FlightMap {
             return _mapCircle.radius.rawValue
         }
 
-        Component.onCompleted: globals.guidedControllerFlyView.orbitMapCircle = orbitMapCircle
+        Component.onCompleted: _guidedController.orbitMapCircle = orbitMapCircle
 
         QGCMapCircle {
             id:                 _mapCircle
@@ -679,76 +681,71 @@ FlightMap {
 
                     QGCButton {
                         Layout.fillWidth:   true
-                        text:               qsTr("Go to location")
-                        visible:            globals.guidedControllerFlyView.showGotoLocation
+                        text:               qsTr("航行至此点")
+                        visible:            _guidedController.showGotoLocation
                         onClicked: {
                             mapClickDropPanel.close()
                             gotoLocationItem.show(mapClickCoord)
-
-                            if ((_activeVehicle.flightMode == _activeVehicle.gotoFlightMode) && !_flyViewSettings.goToLocationRequiresConfirmInGuided.value) {
-                                globals.guidedControllerFlyView.executeAction(globals.guidedControllerFlyView.actionGoto, mapClickCoord, gotoLocationItem)
-                                gotoLocationItem.actionConfirmed() // Still need to call this to commit the new coordinate and radius
-                            } else {
-                                globals.guidedControllerFlyView.confirmAction(globals.guidedControllerFlyView.actionGoto, mapClickCoord, gotoLocationItem)
-                            }
+                            _guidedController.executeAction(_guidedController.actionGoto, mapClickCoord, gotoLocationItem)
+                            gotoLocationItem.actionConfirmed()
                         }
                     }
 
                     QGCButton {
                         Layout.fillWidth:   true
-                        text:               qsTr("Orbit at location")
-                        visible:            globals.guidedControllerFlyView.showOrbit
+                        text:               qsTr("环绕此点")
+                        visible:            _guidedController.showOrbit
                         onClicked: {
                             mapClickDropPanel.close()
                             orbitMapCircle.show(mapClickCoord)
-                            globals.guidedControllerFlyView.confirmAction(globals.guidedControllerFlyView.actionOrbit, mapClickCoord, orbitMapCircle)
+                            _guidedController.confirmAction(_guidedController.actionOrbit, mapClickCoord, orbitMapCircle)
                         }
                     }
 
                     QGCButton {
                         Layout.fillWidth:   true
-                        text:               qsTr("ROI at location")
-                        visible:            globals.guidedControllerFlyView.showROI
+                        text:               qsTr("关注此点")
+                        visible:            _guidedController.showROI
                         onClicked: {
                             mapClickDropPanel.close()
-                            globals.guidedControllerFlyView.executeAction(globals.guidedControllerFlyView.actionROI, mapClickCoord, 0, false)
+                            _guidedController.executeAction(_guidedController.actionROI, mapClickCoord, 0, false)
                         }
                     }
 
                     QGCButton {
                         Layout.fillWidth:   true
-                        text:               qsTr("Set home here")
-                        visible:            globals.guidedControllerFlyView.showSetHome
+                        text:               qsTr("设为返航点")
+                        visible:            _guidedController.showSetHome
                         onClicked: {
                             mapClickDropPanel.close()
-                            globals.guidedControllerFlyView.confirmAction(globals.guidedControllerFlyView.actionSetHome, mapClickCoord)
+                            _guidedController.confirmAction(_guidedController.actionSetHome, mapClickCoord)
                         }
                     }
 
                     QGCButton {
                         Layout.fillWidth:   true
-                        text:               qsTr("Set Estimator Origin")
-                        visible:            globals.guidedControllerFlyView.showSetEstimatorOrigin
+                        text:               qsTr("设为估计原点")
+                        visible:            _guidedController.showSetEstimatorOrigin
                         onClicked: {
                             mapClickDropPanel.close()
-                            globals.guidedControllerFlyView.confirmAction(globals.guidedControllerFlyView.actionSetEstimatorOrigin, mapClickCoord)
+                            _guidedController.confirmAction(_guidedController.actionSetEstimatorOrigin, mapClickCoord)
                         }
                     }
 
                     QGCButton {
                         Layout.fillWidth:   true
-                        text:               qsTr("Set Heading")
-                        visible:            globals.guidedControllerFlyView.showChangeHeading
+                        text:               qsTr("设置航向")
+                        visible:            _guidedController.showChangeHeading
                         onClicked: {
                             mapClickDropPanel.close()
-                            globals.guidedControllerFlyView.confirmAction(globals.guidedControllerFlyView.actionChangeHeading, mapClickCoord)
+                            _guidedController.confirmAction(_guidedController.actionChangeHeading, mapClickCoord)
                         }
                     }
 
                     ColumnLayout {
                         spacing: 0
-                        QGCLabel { text: qsTr("Lat: %1").arg(mapClickCoord.latitude.toFixed(6)) }
-                        QGCLabel { text: qsTr("Lon: %1").arg(mapClickCoord.longitude.toFixed(6)) }
+                        QGCLabel { text: qsTr("纬度: %1").arg(mapClickCoord.latitude.toFixed(6)) }
+                        QGCLabel { text: qsTr("经度: %1").arg(mapClickCoord.longitude.toFixed(6)) }
                     }
                 }
             }
@@ -756,10 +753,10 @@ FlightMap {
     }
 
     onMapClicked: (position) => {
-        if (!globals.guidedControllerFlyView.guidedUIVisible && 
-            (globals.guidedControllerFlyView.showGotoLocation || globals.guidedControllerFlyView.showOrbit ||
-             globals.guidedControllerFlyView.showROI || globals.guidedControllerFlyView.showSetHome ||
-             globals.guidedControllerFlyView.showSetEstimatorOrigin)) {
+        if (!_guidedController.guidedUIVisible && 
+            (_guidedController.showGotoLocation || _guidedController.showOrbit ||
+             _guidedController.showROI || _guidedController.showSetHome ||
+             _guidedController.showSetEstimatorOrigin)) {
 
             position = Qt.point(position.x, position.y)
             var clickCoord = _root.toCoordinate(position, false /* clipToViewPort */)

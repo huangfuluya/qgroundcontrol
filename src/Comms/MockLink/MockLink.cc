@@ -1886,8 +1886,7 @@ void MockLink::_sendVideoInfo()
                 70,
                 nameBA.constData(),
                 uriBA.constData(),
-                VIDEO_STREAM_ENCODING_H264,
-                0);
+                VIDEO_STREAM_ENCODING_H264);
             respondWithMavlinkMessage(msg);
 
             (void) mavlink_msg_video_stream_status_pack_chan(
@@ -1902,8 +1901,7 @@ void MockLink::_sendVideoInfo()
                 1920,
                 1000,
                 0,
-                70,
-                0);
+                70);
             respondWithMavlinkMessage(msg);
         }
     }

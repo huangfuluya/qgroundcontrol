@@ -40,6 +40,11 @@
         <file alias="Viewer3D/Models3D/Line3D.qml">src/Viewer3D/Viewer3DQml/Models3D/Line3D.qml</file>
         <file alias="Viewer3D/Models3D/Viewer3DVehicleItems.qml">src/Viewer3D/Viewer3DQml/Models3D/Viewer3DVehicleItems.qml</file>
         <file alias="Viewer3D/Viewer3DProgressBar.qml">src/Viewer3D/Viewer3DQml/Viewer3DProgressBar.qml</file>
+        <file alias="QGroundControl/BasicMode/BasicModeView.qml">src/UI/BasicMode/BasicModeView.qml</file>
+        <file alias="QGroundControl/BasicMode/BasicFlyView.qml">src/UI/BasicMode/BasicFlyView.qml</file>
+        <file alias="QGroundControl/BasicMode/BasicVideoView.qml">src/UI/BasicMode/BasicVideoView.qml</file>
+        <file alias="QGroundControl/BasicMode/BasicPlanView.qml">src/UI/BasicMode/BasicPlanView.qml</file>
+        <file alias="QGroundControl/BasicMode/BasicLogDownloadView.qml">src/UI/BasicMode/BasicLogDownloadView.qml</file>
     </qresource>
     <qresource prefix="/FirstRunPromptDialogs">
         <file alias="UnitsFirstRunPrompt.qml">src/FirstRunPromptDialogs/UnitsFirstRunPrompt.qml</file>

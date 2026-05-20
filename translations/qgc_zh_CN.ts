@@ -6927,40 +6927,60 @@ Click Ok to start the auto-tuning process.
       <location filename="../src/FlightDisplay/FlyViewMap.qml" line="346"/>
       <source>R</source>
       <comment>rally point map item label</comment>
-      <translation type="unfinished">R</translation>
+      <translation>R</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMap.qml" line="371"/>
       <source>Go here</source>
       <comment>Go to location waypoint</comment>
-      <translation type="unfinished">Go here</translation>
+      <translation>前往此处</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMap.qml" line="474"/>
       <source>ROI here</source>
       <comment>Make this a Region Of Interest</comment>
-      <translation type="unfinished">ROI here</translation>
+      <translation>关注此点</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMap.qml" line="510"/>
       <source>Orbit</source>
       <comment>Orbit waypoint</comment>
-      <translation type="unfinished">Orbit</translation>
+      <translation>环绕</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMap.qml" line="522"/>
       <source>Go to location</source>
-      <translation type="unfinished">Go to location</translation>
+      <translation>航行至此点</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMap.qml" line="531"/>
       <source>Orbit at location</source>
-      <translation type="unfinished">Orbit at location</translation>
+      <translation>环绕此点</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMap.qml" line="540"/>
       <source>ROI at location</source>
-      <translation type="unfinished">ROI at location</translation>
+      <translation>关注此点</translation>
+    </message>
+    <message>
+      <source>Set home here</source>
+      <translation>设为返航点</translation>
+    </message>
+    <message>
+      <source>Set Estimator Origin</source>
+      <translation>设为估计原点</translation>
+    </message>
+    <message>
+      <source>Set Heading</source>
+      <translation>设置航向</translation>
+    </message>
+    <message>
+      <source>Lat: %1</source>
+      <translation>纬度: %1</translation>
+    </message>
+    <message>
+      <source>Lon: %1</source>
+      <translation>经度: %1</translation>
     </message>
   </context>
   <context>
@@ -6968,37 +6988,37 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/FlyViewMissionCompleteDialog.qml" line="44"/>
       <source>Flight Plan complete</source>
-      <translation type="unfinished">Flight Plan complete</translation>
+      <translation>飞行计划已完成</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMissionCompleteDialog.qml" line="80"/>
       <source>%1 Images Taken</source>
-      <translation type="unfinished">%1 Images Taken</translation>
+      <translation>已拍摄 %1 张照片</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMissionCompleteDialog.qml" line="87"/>
       <source>Remove plan from vehicle</source>
-      <translation type="unfinished">Remove plan from vehicle</translation>
+      <translation>从飞行器删除计划</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMissionCompleteDialog.qml" line="98"/>
       <source>Leave plan on vehicle</source>
-      <translation type="unfinished">Leave plan on vehicle</translation>
+      <translation>保留计划在飞行器上</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMissionCompleteDialog.qml" line="116"/>
       <source>Resume Mission From Waypoint %1</source>
-      <translation type="unfinished">Resume Mission From Waypoint %1</translation>
+      <translation>从航点 %1 继续任务</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMissionCompleteDialog.qml" line="127"/>
       <source>Resume Mission will rebuild the current mission from the last flown waypoint and upload it to the vehicle for the next flight.</source>
-      <translation type="unfinished">Resume Mission will rebuild the current mission from the last flown waypoint and upload it to the vehicle for the next flight.</translation>
+      <translation>继续任务将从上次飞行的航点重建当前任务，并上传到飞行器用于下次飞行。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewMissionCompleteDialog.qml" line="135"/>
       <source>If you are changing batteries for Resume Mission do not disconnect from the vehicle.</source>
-      <translation type="unfinished">If you are changing batteries for Resume Mission do not disconnect from the vehicle.</translation>
+      <translation>如果你在继续任务前更换电池，请勿断开与飞行器的连接。</translation>
     </message>
   </context>
   <context>
@@ -7006,7 +7026,22 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/FlyViewPreFlightChecklistPopup.qml" line="21"/>
       <source>Pre-Flight Checklist</source>
-      <translation type="unfinished">Pre-Flight Checklist</translation>
+      <translation>飞行前检查清单</translation>
+    </message>
+  </context>
+  <context>
+    <name>FlyViewToolBar</name>
+    <message>
+      <source>Disconnect</source>
+      <translation>断开连接</translation>
+    </message>
+    <message>
+      <source>Downloading</source>
+      <translation>下载中</translation>
+    </message>
+    <message>
+      <source>Click anywhere to hide</source>
+      <translation>点击任意处隐藏</translation>
     </message>
   </context>
   <context>
@@ -7014,7 +7049,7 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/FlyViewToolStrip.qml" line="18"/>
       <source>Fly</source>
-      <translation type="unfinished">Fly</translation>
+      <translation>飞行</translation>
     </message>
   </context>
   <context>
@@ -7022,7 +7057,7 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/FlyViewToolStripActionList.qml" line="22"/>
       <source>Plan</source>
-      <translation type="unfinished">Plan</translation>
+      <translation>规划</translation>
     </message>
   </context>
   <context>
@@ -7030,7 +7065,7 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/FlyViewVideo.qml" line="68"/>
       <source>Double-click to exit full screen</source>
-      <translation type="unfinished">Double-click to exit full screen</translation>
+      <translation>双击退出全屏</translation>
     </message>
   </context>
   <context>
@@ -7038,12 +7073,12 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/FlyViewWidgetLayer.qml" line="89"/>
       <source>Single</source>
-      <translation type="unfinished">Single</translation>
+      <translation>单机</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/FlyViewWidgetLayer.qml" line="95"/>
       <source>Multi-Vehicle</source>
-      <translation type="unfinished">Multi-Vehicle</translation>
+      <translation>多机</translation>
     </message>
   </context>
   <context>
@@ -7839,7 +7874,11 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/GuidedActionConfirm.qml" line="104"/>
       <source>Slide to confirm</source>
-      <translation type="unfinished">Slide to confirm</translation>
+      <translation>滑动确认</translation>
+    </message>
+    <message>
+      <source>Slide or hold spacebar</source>
+      <translation>滑动或按住空格键</translation>
     </message>
   </context>
   <context>
@@ -7847,7 +7886,7 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/GuidedActionList.qml" line="81"/>
       <source>Select Action</source>
-      <translation type="unfinished">Select Action</translation>
+      <translation>选择动作</translation>
     </message>
   </context>
   <context>
@@ -7855,222 +7894,310 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="36"/>
       <source>EMERGENCY STOP</source>
-      <translation type="unfinished">EMERGENCY STOP</translation>
+      <translation>紧急停机</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="37"/>
       <source>Arm</source>
-      <translation type="unfinished">Arm</translation>
+      <translation>解锁</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="39"/>
       <source>Disarm</source>
-      <translation type="unfinished">Disarm</translation>
+      <translation>上锁</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="40"/>
       <source>Return</source>
-      <translation type="unfinished">Return</translation>
+      <translation>返航</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="41"/>
       <source>Takeoff</source>
-      <translation type="unfinished">Takeoff</translation>
+      <translation>起飞</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="42"/>
       <source>Land</source>
-      <translation type="unfinished">Land</translation>
+      <translation>降落</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="43"/>
       <source>Start Mission</source>
-      <translation type="unfinished">Start Mission</translation>
+      <translation>开始任务</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="44"/>
       <source>Start Mission (MV)</source>
-      <translation type="unfinished">Start Mission (MV)</translation>
+      <translation>开始任务（多机）</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="45"/>
       <source>Continue Mission</source>
-      <translation type="unfinished">Continue Mission</translation>
+      <translation>继续任务</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="46"/>
       <source>Resume FAILED</source>
-      <translation type="unfinished">Resume FAILED</translation>
+      <translation>恢复失败</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="47"/>
       <source>Pause</source>
-      <translation type="unfinished">Pause</translation>
+      <translation>暂停</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="48"/>
       <source>Pause (MV)</source>
-      <translation type="unfinished">Pause (MV)</translation>
+      <translation>暂停（多机）</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="49"/>
       <source>Change Altitude</source>
-      <translation type="unfinished">Change Altitude</translation>
+      <translation>更改高度</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="50"/>
       <source>Orbit</source>
-      <translation type="unfinished">Orbit</translation>
+      <translation>环绕</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="51"/>
       <source>Land Abort</source>
-      <translation type="unfinished">Land Abort</translation>
+      <translation>中止降落</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="52"/>
       <source>Set Waypoint</source>
-      <translation type="unfinished">Set Waypoint</translation>
+      <translation>设置航点</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="53"/>
       <source>Go To Location</source>
-      <translation type="unfinished">Go To Location</translation>
+      <translation>前往指定位置</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="67"/>
       <source>Return to the launch position of the vehicle.</source>
-      <translation type="unfinished">Return to the launch position of the vehicle.</translation>
+      <translation>返回到飞行器起飞点。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="54"/>
       <source>VTOL Transition</source>
-      <translation type="unfinished">VTOL Transition</translation>
+      <translation>垂起转换</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="38"/>
       <source>Force Arm</source>
-      <translation type="unfinished">Force Arm</translation>
+      <translation>强制解锁</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="55"/>
       <source>ROI</source>
-      <translation type="unfinished">ROI</translation>
+      <translation>兴趣区域</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="56"/>
       <source>Action</source>
-      <translation type="unfinished">Action</translation>
+      <translation>动作</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="58"/>
       <source>Arm the vehicle.</source>
-      <translation type="unfinished">Arm the vehicle.</translation>
+      <translation>解锁飞行器。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="59"/>
       <source>WARNING: This will force arming of the vehicle bypassing any safety checks.</source>
-      <translation type="unfinished">WARNING: This will force arming of the vehicle bypassing any safety checks.</translation>
+      <translation>警告：这将绕过所有安全检查并强制解锁飞行器。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="60"/>
       <source>Disarm the vehicle</source>
-      <translation type="unfinished">Disarm the vehicle</translation>
+      <translation>上锁飞行器</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="61"/>
       <source>WARNING: THIS WILL STOP ALL MOTORS. IF VEHICLE IS CURRENTLY IN THE AIR IT WILL CRASH.</source>
-      <translation type="unfinished">WARNING: THIS WILL STOP ALL MOTORS. IF VEHICLE IS CURRENTLY IN THE AIR IT WILL CRASH.</translation>
+      <translation>警告：这将停止所有电机。若飞行器当前在空中，将会坠毁。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="62"/>
       <source>Takeoff from ground and hold position.</source>
-      <translation type="unfinished">Takeoff from ground and hold position.</translation>
+      <translation>从地面起飞并保持位置。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="63"/>
       <source>Takeoff from ground and start the current mission.</source>
-      <translation type="unfinished">Takeoff from ground and start the current mission.</translation>
+      <translation>从地面起飞并开始当前任务。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="64"/>
       <source>Continue the mission from the current waypoint.</source>
-      <translation type="unfinished">Continue the mission from the current waypoint.</translation>
+      <translation>从当前航点继续任务。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="65"/>
       <source>Upload of resume mission failed. Confirm to retry upload</source>
-      <translation type="unfinished">Upload of resume mission failed. Confirm to retry upload</translation>
+      <translation>恢复任务上传失败。确认后重试上传。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="66"/>
       <source>Land the vehicle at the current position.</source>
-      <translation type="unfinished">Land the vehicle at the current position.</translation>
+      <translation>在当前位置降落飞行器。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="68"/>
       <source>Change the altitude of the vehicle up or down.</source>
-      <translation type="unfinished">Change the altitude of the vehicle up or down.</translation>
+      <translation>调整飞行器高度（升高或降低）。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="69"/>
       <source>Move the vehicle to the specified location.</source>
-      <translation type="unfinished">Move the vehicle to the specified location.</translation>
+      <translation>将飞行器移动到指定位置。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="70"/>
       <source>Adjust current waypoint to %1.</source>
-      <translation type="unfinished">Adjust current waypoint to %1.</translation>
+      <translation>将当前航点调整为 %1。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="71"/>
       <source>Orbit the vehicle around the specified location.</source>
-      <translation type="unfinished">Orbit the vehicle around the specified location.</translation>
+      <translation>围绕指定位置进行环绕飞行。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="72"/>
       <source>Abort the landing sequence.</source>
-      <translation type="unfinished">Abort the landing sequence.</translation>
+      <translation>中止降落流程。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="73"/>
       <source>Pause the vehicle at it&apos;s current position, adjusting altitude up or down as needed.</source>
-      <translation type="unfinished">Pause the vehicle at it&apos;s current position, adjusting altitude up or down as needed.</translation>
+      <translation>在当前位置暂停飞行器，并按需调整高度。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="74"/>
       <source>Pause all vehicles at their current position.</source>
-      <translation type="unfinished">Pause all vehicles at their current position.</translation>
+      <translation>在各自当前位置暂停所有飞行器。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="75"/>
       <source>Transition VTOL to fixed wing flight.</source>
-      <translation type="unfinished">Transition VTOL to fixed wing flight.</translation>
+      <translation>将垂起飞行器切换到固定翼飞行。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="76"/>
       <source>Transition VTOL to multi-rotor flight.</source>
-      <translation type="unfinished">Transition VTOL to multi-rotor flight.</translation>
+      <translation>将垂起飞行器切换到多旋翼飞行。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="77"/>
       <source>Make the specified location a Region Of Interest.</source>
-      <translation type="unfinished">Make the specified location a Region Of Interest.</translation>
+      <translation>将指定位置设为兴趣区域（ROI）。</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="163"/>
       <source>_activeVehicle(%1) _vehicleArmed(%2) guidedModeSupported(%3) _vehicleFlying(%4) _vehicleWasFlying(%5) _vehicleInRTLMode(%6) pauseVehicleSupported(%7) _vehiclePaused(%8) _flightMode(%9) _missionItemCount(%10) roiSupported(%11) orbitSupported(%12) _missionActive(%13) _hideROI(%14) _hideOrbit(%15)</source>
-      <translation type="unfinished">_activeVehicle(%1) _vehicleArmed(%2) guidedModeSupported(%3) _vehicleFlying(%4) _vehicleWasFlying(%5) _vehicleInRTLMode(%6) pauseVehicleSupported(%7) _vehiclePaused(%8) _flightMode(%9) _missionItemCount(%10) roiSupported(%11) orbitSupported(%12) _missionActive(%13) _hideROI(%14) _hideOrbit(%15)</translation>
+      <translation>_activeVehicle(%1) _vehicleArmed(%2) guidedModeSupported(%3) _vehicleFlying(%4) _vehicleWasFlying(%5) _vehicleInRTLMode(%6) pauseVehicleSupported(%7) _vehiclePaused(%8) _flightMode(%9) _missionItemCount(%10) roiSupported(%11) orbitSupported(%12) _missionActive(%13) _hideROI(%14) _hideOrbit(%15)</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="392"/>
       <source>Smart RTL</source>
-      <translation type="unfinished">Smart RTL</translation>
+      <translation>智能返航</translation>
     </message>
     <message>
       <location filename="../src/FlightDisplay/GuidedActionsController.qml" line="536"/>
       <source>Internal error: unknown actionCode</source>
-      <translation type="unfinished">Internal error: unknown actionCode</translation>
+      <translation>内部错误：未知 actionCode</translation>
+    </message>
+    <message>
+      <source>Arm (MV)</source>
+      <translation>解锁（多机）</translation>
+    </message>
+    <message>
+      <source>Disarm (MV)</source>
+      <translation>上锁（多机）</translation>
+    </message>
+    <message>
+      <source>Change Loiter Radius</source>
+      <translation>更改盘旋半径</translation>
+    </message>
+    <message>
+      <source>Change Max Ground Speed</source>
+      <translation>更改最大地速</translation>
+    </message>
+    <message>
+      <source>Change Airspeed</source>
+      <translation>更改空速</translation>
+    </message>
+    <message>
+      <source>Gripper Function</source>
+      <translation>夹爪功能</translation>
+    </message>
+    <message>
+      <source>Set Home</source>
+      <translation>设置返航点</translation>
+    </message>
+    <message>
+      <source>Set Estimator origin</source>
+      <translation>设置估计原点</translation>
+    </message>
+    <message>
+      <source>Set Flight Mode</source>
+      <translation>设置飞行模式</translation>
+    </message>
+    <message>
+      <source>Change Heading</source>
+      <translation>更改航向</translation>
+    </message>
+    <message>
+      <source>Arm selected vehicles.</source>
+      <translation>解锁所选飞行器。</translation>
+    </message>
+    <message>
+      <source>Disarm selected vehicles.</source>
+      <translation>上锁所选飞行器。</translation>
+    </message>
+    <message>
+      <source>Grab or Release the cargo</source>
+      <translation>抓取或释放载荷</translation>
+    </message>
+    <message>
+      <source>Takeoff from ground and start the current mission for selected vehicles.</source>
+      <translation>为所选飞行器从地面起飞并开始当前任务。</translation>
+    </message>
+    <message>
+      <source>Change the forward flight loiter radius.</source>
+      <translation>更改前飞盘旋半径。</translation>
+    </message>
+    <message>
+      <source>Change the maximum horizontal cruise speed.</source>
+      <translation>更改最大水平巡航速度。</translation>
+    </message>
+    <message>
+      <source>Change the equivalent airspeed setpoint.</source>
+      <translation>更改等效空速设定值。</translation>
+    </message>
+    <message>
+      <source>Pause selected vehicles at their current position.</source>
+      <translation>在当前位置暂停所选飞行器。</translation>
+    </message>
+    <message>
+      <source>Set vehicle home as the specified location. This will affect Return to Home position</source>
+      <translation>将指定位置设置为飞行器返航点。这将影响返航位置。</translation>
+    </message>
+    <message>
+      <source>Make the specified location the estimator origin.</source>
+      <translation>将指定位置设为估计器原点。</translation>
+    </message>
+    <message>
+      <source>Set the vehicle flight mode to %1</source>
+      <translation>将飞行器飞行模式设置为 %1</translation>
+    </message>
+    <message>
+      <source>Set the vehicle heading towards the specified location.</source>
+      <translation>将飞行器航向设置为朝向指定位置。</translation>
     </message>
   </context>
   <context>
@@ -18073,6 +18200,173 @@ Confirm change?</translation>
       <location filename="../src/Settings/VideoSettings.cc" line="31"/>
       <source>Yuneec Mantis G</source>
       <translation type="unfinished">Yuneec Mantis G</translation>
+    </message>
+  </context>
+  <context>
+    <name>BasicMode</name>
+    <message>
+      <source>实时状态</source>
+      <translation>实时状态</translation>
+    </message>
+    <message>
+      <source>视频监控</source>
+      <translation>视频监控</translation>
+    </message>
+    <message>
+      <source>航点规划</source>
+      <translation>航点规划</translation>
+    </message>
+    <message>
+      <source>未连接</source>
+      <translation>未连接</translation>
+    </message>
+    <message>
+      <source>通信中断</source>
+      <translation>通信中断</translation>
+    </message>
+    <message>
+      <source>已连接</source>
+      <translation>已连接</translation>
+    </message>
+    <message>
+      <source>模式: </source>
+      <translation>模式: </translation>
+    </message>
+    <message>
+      <source>纬度:</source>
+      <translation>纬度:</translation>
+    </message>
+    <message>
+      <source>经度:</source>
+      <translation>经度:</translation>
+    </message>
+    <message>
+      <source>航速:</source>
+      <translation>航速:</translation>
+    </message>
+    <message>
+      <source>航向:</source>
+      <translation>航向:</translation>
+    </message>
+    <message>
+      <source>电池:</source>
+      <translation>电池:</translation>
+    </message>
+    <message>
+      <source>信号:</source>
+      <translation>信号:</translation>
+    </message>
+    <message>
+      <source>强</source>
+      <translation>强</translation>
+    </message>
+    <message>
+      <source>中</source>
+      <translation>中</translation>
+    </message>
+    <message>
+      <source>弱</source>
+      <translation>弱</translation>
+    </message>
+    <message>
+      <source>一键返航</source>
+      <translation>一键返航</translation>
+    </message>
+    <message>
+      <source>紧急停船</source>
+      <translation>紧急停船</translation>
+    </message>
+    <message>
+      <source>确认操作</source>
+      <translation>确认操作</translation>
+    </message>
+    <message>
+      <source>确定要执行一键返航吗？\n无人船将立即返回预设的返航点。</source>
+      <translation>确定要执行一键返航吗？\n无人船将立即返回预设的返航点。</translation>
+    </message>
+    <message>
+      <source>确定要紧急停船吗？\n无人船将立即切换到保持模式并原地待命。</source>
+      <translation>确定要紧急停船吗？\n无人船将立即切换到保持模式并原地待命。</translation>
+    </message>
+    <message>
+      <source>视频画面区域\n等待视频信号...</source>
+      <translation>视频画面区域\n等待视频信号...</translation>
+    </message>
+    <message>
+      <source>切换摄像头</source>
+      <translation>切换摄像头</translation>
+    </message>
+    <message>
+      <source>停止录像</source>
+      <translation>停止录像</translation>
+    </message>
+    <message>
+      <source>开始录像</source>
+      <translation>开始录像</translation>
+    </message>
+    <message>
+      <source>拍照</source>
+      <translation>拍照</translation>
+    </message>
+    <message>
+      <source>任务工具</source>
+      <translation>任务工具</translation>
+    </message>
+    <message>
+      <source>添加航点</source>
+      <translation>添加航点</translation>
+    </message>
+    <message>
+      <source>删除航点</source>
+      <translation>删除航点</translation>
+    </message>
+    <message>
+      <source>清空任务</source>
+      <translation>清空任务</translation>
+    </message>
+    <message>
+      <source>执行中...</source>
+      <translation>执行中...</translation>
+    </message>
+    <message>
+      <source>开始任务</source>
+      <translation>开始任务</translation>
+    </message>
+    <message>
+      <source>暂停任务</source>
+      <translation>暂停任务</translation>
+    </message>
+    <message>
+      <source>任务进度:</source>
+      <translation>任务进度:</translation>
+    </message>
+    <message>
+      <source>进行中</source>
+      <translation>进行中</translation>
+    </message>
+    <message>
+      <source>确定要开始执行任务吗？\n无人船将按照规划的航点顺序自动航行。</source>
+      <translation>确定要开始执行任务吗？\n无人船将按照规划的航点顺序自动航行。</translation>
+    </message>
+    <message>
+      <source>确定要清空所有航点吗？\n此操作不可撤销。</source>
+      <translation>确定要清空所有航点吗？\n此操作不可撤销。</translation>
+    </message>
+    <message>
+      <source>基础</source>
+      <translation>基础</translation>
+    </message>
+    <message>
+      <source>高级</source>
+      <translation>高级</translation>
+    </message>
+    <message>
+      <source>切换至高级模式</source>
+      <translation>切换至高级模式</translation>
+    </message>
+    <message>
+      <source>切换至基础模式</source>
+      <translation>切换至基础模式</translation>
     </message>
   </context>
 </TS>

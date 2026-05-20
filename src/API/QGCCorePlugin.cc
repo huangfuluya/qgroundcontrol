@@ -10,6 +10,7 @@
 #include "QGCCorePlugin.h"
 #include "QGCLogging.h"
 #include "AppSettings.h"
+#include "SettingsManager.h"
 #include "MavlinkSettings.h"
 #include "FactMetaData.h"
 #ifdef QGC_GST_STREAMING
@@ -53,6 +54,19 @@ QGCCorePlugin::QGCCorePlugin(QObject *parent)
     , _emptyCustomMapItems(new QmlObjectListModel(this))
 {
     // qCDebug(QGCCorePluginLog) << Q_FUNC_INFO << this;
+}
+
+void QGCCorePlugin::init()
+{
+    // Restore showAdvancedUI from persisted AppSettings
+    SettingsFact* fact = qobject_cast<SettingsFact*>(SettingsManager::instance()->appSettings()->showAdvancedUI());
+    if (fact) {
+        bool savedValue = fact->rawValue().toBool();
+        if (savedValue != _showAdvancedUI) {
+            _showAdvancedUI = savedValue;
+            emit showAdvancedUIChanged(_showAdvancedUI);
+        }
+    }
 }
 
 QGCCorePlugin::~QGCCorePlugin()
@@ -149,10 +163,12 @@ bool QGCCorePlugin::adjustSettingMetaData(const QString &settingsGroup, FactMeta
 
 QString QGCCorePlugin::showAdvancedUIMessage() const
 {
-    return tr("WARNING: You are about to enter Advanced Mode. "
-              "If used incorrectly, this may cause your vehicle to malfunction thus voiding your warranty. "
-              "You should do so only if instructed by customer support. "
-              "Are you sure you want to enable Advanced Mode?");
+    return tr("您正在切换至高级模式，所有专业配置与调试功能将显示。\n建议熟悉无人船系统的技术人员使用。\n\n确定要启用高级模式吗？");
+}
+
+QString QGCCorePlugin::showBasicUIMessage() const
+{
+    return tr("您正在切换至基础模式，专业配置与调试功能将隐藏，\n仅保留日常操作所需的核心功能。\n推荐普通操作人员使用。\n\n确定要切换到基础模式吗？");
 }
 
 void QGCCorePlugin::factValueGridCreateDefaultSettings(FactValueGrid* factValueGrid)
@@ -366,6 +382,10 @@ void QGCCorePlugin::_setShowAdvancedUI(bool show)
 {
     if (show != _showAdvancedUI) {
         _showAdvancedUI = show;
+        // Persist to AppSettings
+        if (SettingsManager::instance()->appSettings()->showAdvancedUI()->rawValue().toBool() != show) {
+            SettingsManager::instance()->appSettings()->showAdvancedUI()->setRawValue(show);
+        }
         emit showAdvancedUIChanged(show);
     }
 }

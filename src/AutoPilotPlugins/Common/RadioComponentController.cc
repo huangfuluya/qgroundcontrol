@@ -14,6 +14,7 @@
 #include "QGCLoggingCategory.h"
 #include "Vehicle.h"
 
+#include <common/common.h>
 #include <QtCore/QSettings>
 
 QGC_LOGGING_CATEGORY(RadioComponentControllerLog, "qgc.autopilotplugins.common.radiocomponentcontroller")
@@ -618,12 +619,13 @@ void RadioComponentController::_setInternalCalibrationValuesFromParameters()
 
 void RadioComponentController::spektrumBindMode(int mode)
 {
-    _vehicle->pairRX(RC_TYPE_SPEKTRUM, mode);
+    const int rxType = mode == DSM2 ? RC_TYPE_SPEKTRUM_DSM2 : RC_TYPE_SPEKTRUM_DSMX;
+    _vehicle->pairRX(rxType, mode);
 }
 
 void RadioComponentController::crsfBindMode()
 {
-    _vehicle->pairRX(RC_TYPE_CRSF, 0);
+    qCWarning(RadioComponentControllerLog) << "CRSF bind is not supported by the local MAVLink headers";
 }
 
 void RadioComponentController::_validateCalibration()
