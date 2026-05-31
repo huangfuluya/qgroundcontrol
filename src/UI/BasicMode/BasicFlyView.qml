@@ -7,7 +7,7 @@
  *
  ****************************************************************************/
 
-// 飞行监控 - Flight Monitor Tab
+// 航行监控 - Navigation Monitor Tab
 // 主视图支持地图/视频双窗口切换，并保留基础模式的状态与操作叠加层
 // 左侧：紧凑状态条（6项指示器）
 // 右侧：快捷操作按钮（3个）
@@ -373,7 +373,7 @@ Item {
                 Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 3
                 Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 13
                 enabled:            _activeVehicle !== null && _activeVehicle.flightMode !== "Loiter"
-                backgroundColor:    "#50B86C"
+                backgroundColor:    "#4A90D9"
                 onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Loiter" }
             }
             QGCButton {
@@ -382,7 +382,7 @@ Item {
                 Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 3
                 Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 13
                 enabled:            _activeVehicle !== null && _activeVehicle.flightMode !== "Hold"
-                backgroundColor:    "#E6A817"
+                backgroundColor:    "#4A90D9"
                 onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Hold" }
             }
             QGCButton {
@@ -391,7 +391,7 @@ Item {
                 Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 3
                 Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 13
                 enabled:            _activeVehicle !== null && _activeVehicle.flightMode !== "Auto"
-                backgroundColor:    "#9B59B6"
+                backgroundColor:    "#4A90D9"
                 onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Auto" }
             }
         }

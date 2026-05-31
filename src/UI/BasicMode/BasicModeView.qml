@@ -8,7 +8,7 @@
  ****************************************************************************/
 
 // Basic Mode - Simplified interface for non-technical operators
-// Tab 1: 飞行监控 (Flight Monitor)
+// Tab 1: 航行监控 (Navigation Monitor)
 // Tab 2: 航点规划 (Waypoint Planning)
 // Tab 3: 日志下载 (Log Download)
 
@@ -43,7 +43,7 @@ Item {
             Component.onCompleted: currentIndex = 0
 
             QGCTabButton {
-                text:       qsTr("飞行监控")
+                text:       qsTr("航行监控")
                 pointSize:  ScreenTools.largeFontPointSize
             }
             QGCTabButton {
