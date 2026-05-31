@@ -101,6 +101,25 @@ void VideoManager::init(QQuickWindow *window)
 
     (void) connect(this, &VideoManager::autoStreamConfiguredChanged, this, &VideoManager::_videoSourceChanged);
 
+    // When switching between Basic/Advanced mode, the Loader destroys/recreates video widgets.
+    // The signal fires synchronously, but QML binding updates (Loader active/visible) may be
+    // deferred. Use QTimer::singleShot(0) to ensure the rebind runs after the Loader has
+    // updated its loaded item.
+    (void) connect(QGCCorePlugin::instance(), &QGCCorePlugin::showAdvancedUIChanged, this, [this, window]() {
+        QTimer::singleShot(0, this, [this, window]() {
+            for (VideoReceiver *receiver : std::as_const(_videoReceivers)) {
+                QQuickItem *widget = window->findChild<QQuickItem*>(receiver->name());
+                if (widget && widget != receiver->widget()) {
+                    qCDebug(VideoManagerLog) << "Mode switch: rebinding video widget" << receiver->name();
+                    receiver->setWidget(widget);
+                    if (receiver->started() && receiver->sink()) {
+                        receiver->startDecoding(receiver->sink());
+                    }
+                }
+            }
+        });
+    });
+
     static const QStringList videoStreamList = {
         "videoContent",
         "thermalVideo"
@@ -478,13 +497,15 @@ bool VideoManager::_updateVideoUri(VideoReceiver *receiver, const QString &uri)
         return false;
     }
 
-    if ((uri == receiver->uri()) && !receiver->uri().isNull()) {
+    const QString normalizedUri = uri.trimmed();
+
+    if ((normalizedUri == receiver->uri()) && !receiver->uri().isNull()) {
         return false;
     }
 
-    qCDebug(VideoManagerLog) << "New Video URI" << uri;
+    qCDebug(VideoManagerLog) << "New Video URI" << normalizedUri;
 
-    receiver->setUri(uri);
+    receiver->setUri(normalizedUri);
 
     return true;
 }
@@ -680,6 +701,14 @@ void VideoManager::_initVideoReceiver(VideoReceiver *receiver, QQuickWindow *win
         qCCritical(VideoManagerLog) << "stream widget not found" << receiver->name();
     }
     receiver->setWidget(widget);
+
+    // When the widget is destroyed (e.g. Loader deactivates), clear the stale pointer
+    // so that the mode-switch rebind handler doesn't compare against a dangling pointer.
+    if (widget) {
+        (void) connect(widget, &QObject::destroyed, receiver, [receiver]() {
+            receiver->setWidget(nullptr);
+        });
+    }
 
     void *sink = QGCCorePlugin::instance()->createVideoSink(receiver->widget(), receiver);
     if (!sink) {

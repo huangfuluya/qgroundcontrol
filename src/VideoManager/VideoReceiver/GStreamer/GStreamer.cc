@@ -304,6 +304,7 @@ void _setCodecPriorities(GStreamer::VideoDecoderOptions option)
     // TODO: ForceVideoDecoderCustom in VideoSettings with textbox in QML
 
     static constexpr uint16_t PrioritizedRank = GST_RANK_PRIMARY + 1;
+    static constexpr uint16_t DeprioritizedRank = GST_RANK_MARGINAL;
 
     switch (option) {
     case GStreamer::ForceVideoDecoderDefault:
@@ -312,6 +313,11 @@ void _setCodecPriorities(GStreamer::VideoDecoderOptions option)
         for (const char *name : {"avdec_h264", "avdec_h265", "avdec_mjpeg", "avdec_mpeg2video", "avdec_mpeg4", "avdec_vp8", "avdec_vp9",
                                  "dav1ddec", "vp8dec", "vp9dec"}) {
             changeRank(name, PrioritizedRank);
+        }
+        // Deprioritize old VA-API decoder (vaapih264dec) to prevent it from being selected over software decoders
+        for (const char *name : {"vaapih264dec", "vaapih265dec", "vaapimpeg2dec", "vaapimpeg4dec", "vaapivp8dec", "vaapivp9dec",
+                                 "vaapidecodebin"}) {
+            changeRank(name, DeprioritizedRank);
         }
         break;
     case GStreamer::ForceVideoDecoderVAAPI:

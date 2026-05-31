@@ -7,8 +7,8 @@
  *
  ****************************************************************************/
 
-// 实时状态 - Real-time Status Tab
-// 全屏地图 + 浮动叠加面板
+// 飞行监控 - Flight Monitor Tab
+// 主视图支持地图/视频双窗口切换，并保留基础模式的状态与操作叠加层
 // 左侧：紧凑状态条（6项指示器）
 // 右侧：快捷操作按钮（3个）
 // 底部：快捷模式切换按钮（4个，水平平铺）
@@ -39,6 +39,7 @@ Item {
     property var    _guidedController:      guidedActionsController
     property var    planController:         _planController
     property var    guidedController:       guidedActionsController
+    property real   _pipMargin:             ScreenTools.defaultFontPixelWidth * 0.75
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
@@ -57,13 +58,37 @@ Item {
         Component.onCompleted: confirmDialog = guidedActionConfirm
     }
 
-    //-- Full-screen Map
-    FlyViewMap {
-        id:                     mapControl
-        anchors.fill:           parent
-        planMasterController:   _planController
-        guidedController:       guidedActionsController
-        mapName:                "BasicModeFlyView"
+    Item {
+        id:                 mainView
+        anchors.fill:       parent
+
+        FlyViewMap {
+            id:                     mapControl
+            anchors.fill:           parent
+            planMasterController:   _planController
+            guidedController:       guidedActionsController
+            pipView:                _pipView
+            pipMode:                videoControl.pipState.state === videoControl.pipState.fullState
+            mapName:                "BasicModeFlyView"
+        }
+
+        FlyViewVideo {
+            id:         videoControl
+            pipView:    _pipView
+        }
+
+        PipView {
+            id:                     _pipView
+            anchors.left:           leftStrip.right
+            anchors.bottom:         quickModeBar.top
+            anchors.margins:        _pipMargin
+            item1IsFullSettingsKey: "BasicModeMainFlyWindowIsMap"
+            item1:                  mapControl
+            item2:                  QGroundControl.videoManager.hasVideo ? videoControl : null
+            show:                   QGroundControl.videoManager.hasVideo && !QGroundControl.videoManager.fullScreen &&
+                                        (videoControl.pipState.state === videoControl.pipState.pipState || mapControl.pipState.state === mapControl.pipState.pipState)
+            z:                      QGroundControl.zOrderWidgets
+        }
     }
 
     //-- Left Side: Compact Status Strip (overlay on map)
@@ -75,6 +100,7 @@ Item {
         width:                  ScreenTools.defaultFontPixelWidth * 8
         color:                  Qt.rgba(0, 0, 0, 0.55)
         border.color:           Qt.rgba(1, 1, 1, 0.15)
+        visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
             anchors.fill: parent
@@ -233,6 +259,7 @@ Item {
         color:                  Qt.rgba(0, 0, 0, 0.55)
         border.color:           Qt.rgba(1, 1, 1, 0.15)
         radius:                 4
+        visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
             anchors.fill: parent
@@ -259,6 +286,7 @@ Item {
         color:                  Qt.rgba(0, 0, 0, 0.55)
         border.color:           Qt.rgba(1, 1, 1, 0.15)
         radius:                 4
+        visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
             anchors.fill: parent
@@ -285,6 +313,7 @@ Item {
         color:                  Qt.rgba(0, 0, 0, 0.55)
         border.color:           Qt.rgba(1, 1, 1, 0.15)
         radius:                 4
+        visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
             anchors.fill: parent
@@ -310,6 +339,7 @@ Item {
 
     //-- Bottom: Quick Mode Switch Buttons (overlay, horizontal)
     Rectangle {
+        id:                         quickModeBar
         anchors.bottom:             parent.bottom
         anchors.bottomMargin:       _margins
         anchors.horizontalCenter:   parent.horizontalCenter
@@ -318,6 +348,7 @@ Item {
         color:                      Qt.rgba(0, 0, 0, 0.6)
         border.color:               Qt.rgba(1, 1, 1, 0.15)
         radius:                     4
+        visible:                    !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
             anchors.fill: parent
@@ -418,6 +449,7 @@ Item {
         color:                  Qt.rgba(0, 0, 0, 0.5)
         radius:                 4
         border.color:           Qt.rgba(1, 1, 1, 0.15)
+        visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
             anchors.fill: parent

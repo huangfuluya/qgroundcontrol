@@ -29,6 +29,8 @@
 
 QGC_LOGGING_CATEGORY(GstVideoReceiverLog, "qgc.videomanager.videoreceiver.gstreamer.gstvideoreceiver")
 
+static constexpr guint64 kRtspUdpReconnectTimeoutUs = 5 * G_USEC_PER_SEC;
+
 GstVideoReceiver::GstVideoReceiver(QObject *parent)
     : VideoReceiver(parent)
     , _worker(new GstVideoWorker(this))
@@ -662,6 +664,8 @@ GstElement *GstVideoReceiver::_makeSource(const QString &input)
             g_object_set(source,
                          "location", input.toUtf8().constData(),
                          "latency", 25,
+                         "udp-reconnect", TRUE,
+                         "timeout", kRtspUdpReconnectTimeoutUs,
                          nullptr);
         } else if (isTcpMPEGTS) {
             source = gst_element_factory_make("tcpclientsrc", "source");
