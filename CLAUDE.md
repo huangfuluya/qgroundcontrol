@@ -113,6 +113,74 @@ Place a `custom/` directory at root to override app name, resources, firmware pl
 - `_` prefix for private properties
 - Public properties first, private second
 
+## Android Build
+
+### Prerequisites
+
+```bash
+# Qt 6.8.3 with Android toolchain (via aqtinstall)
+aqt install-qt linux android 6.8.3 android_arm64_v8a \
+  -m qtcharts qtlocation qtmultimedia qtpositioning qtsensors \
+     qtserialport qtconnectivity qtquick3d qt5compat qtspeech \
+  --outputdir ~/Qt
+
+# Host Qt (required for cross-compile tools)
+aqt install-qt linux desktop 6.8.3 gcc_64 --outputdir ~/Qt
+
+# Android SDK/NDK
+ANDROID_HOME=~/android-sdk
+ANDROID_NDK=~/android-sdk/ndk/26.1.10909125
+```
+
+### Build Script: `build-android.sh`
+
+```bash
+./build-android.sh                          # Default arm64-v8a RelWithDebInfo
+./build-android.sh -a x86_64 -t Release     # x86_64 Release
+./build-android.sh --clean --package        # Clean rebuild + APK
+./build-android.sh --herelink               # Herelink device (Qt 6.6.3)
+```
+
+**Key CMake options set by the script:**
+
+| Option | Value | Reason |
+|--------|-------|--------|
+| `QGC_ENABLE_GST_VIDEOSTREAMING` | OFF | GStreamer has no Android prebuilt toolchain |
+| `QGC_ENABLE_QT_VIDEOSTREAMING` | ON | Enables RTSP/UDP/TCP video via Qt6 `QMediaPlayer` |
+| `QGC_CPM_SOURCE_CACHE` | `build/cpm_cache` | Shared CPM cache for mavlink, openssl, etc. |
+| `ANDROID_NDK_ROOT` | env variable | Required by Qt toolchain to locate NDK cmake file |
+
+**Critical environment variables** (set in `setup_environment()`):
+- `ANDROID_NDK_ROOT` — Qt toolchain reads this to chainload `android.toolchain.cmake`
+- `ANDROID_SDK_ROOT` — Qt toolchain fallback SDK path
+
+### Video Backend (RTSP on Android)
+
+QGC has three video backends, selected at compile time:
+
+```
+createVideoReceiver():
+  #ifdef QGC_GST_STREAMING     → GStreamer (desktop default, unavailable on Android)
+  #elifdef QGC_QT_STREAMING    → Qt6 QMediaPlayer (used on Android, enabled by script)
+  #else                        → null (no video at all)
+```
+
+`QtMultimediaReceiver` wraps `QMediaPlayer` and handles RTSP/UDP/TCP natively. Android Qt6 ships with `ffmpegmediaplugin` + `androidmediaplugin` for hardware-accelerated decoding.
+
+### APK Signing for Test Install
+
+The script produces an **unsigned** APK. For test install via adb, rebuild with Gradle:
+
+```bash
+cd build/android-arm64-v8a-RelWithDebInfo/android-build
+../../../../../android/gradlew assembleDebug
+adb install build/outputs/apk/debug/android-build-debug.apk
+```
+
+### CPM Cache Pitfall
+
+During CMake configure, `FetchContent` clones mavlink from GitHub. If interrupted, the cache dir at `build/cpm_cache/mavlink/<hash>/` may be empty (`.git` dir exists but no working tree), causing `mavlink_types.h: No such file or directory`. Solution: clean cache and reconfigure, or pre-clone manually into the cache.
+
 ## CI
 
 Workflows in `.github/workflows/`. Linux CI: install Qt via `jurplel/install-qt-action@v4`, configure with `qt-cmake`, build, run tests with `xvfb-run -a ./QGroundControl --unittest`. Covers Linux, Windows, macOS, Android, iOS, Flatpak, Docker.
