@@ -181,6 +181,39 @@ adb install build/outputs/apk/debug/android-build-debug.apk
 
 During CMake configure, `FetchContent` clones mavlink from GitHub. If interrupted, the cache dir at `build/cpm_cache/mavlink/<hash>/` may be empty (`.git` dir exists but no working tree), causing `mavlink_types.h: No such file or directory`. Solution: clean cache and reconfigure, or pre-clone manually into the cache.
 
+### App Icon
+
+App icons are generated from `resources/zhuangzhou.png` (1467×1467 RGBA). To update the logo, resize this source image to all required formats:
+
+| Target | Size | Location |
+|--------|------|----------|
+| Android ldpi | 36×36 | `android/res/drawable-ldpi/icon.png` |
+| Android mdpi | 48×48 | `android/res/drawable-mdpi/icon.png` |
+| Android hdpi | 72×72 | `android/res/drawable-hdpi/icon.png` |
+| Android xhdpi | 96×96 | `android/res/drawable-xhdpi/icon.png` |
+| Android xxhdpi | 144×144 | `android/res/drawable-xxhdpi/icon.png` |
+| Android xxxhdpi | 192×192 | `android/res/drawable-xxxhdpi/icon.png` |
+| Main icon | 512×512 | `resources/icons/qgroundcontrol.png` |
+| Android 512 | 512×512 | `resources/icons/android_512x512.png` |
+| Windows ICO | 16/32/48/64/128/256 | `deploy/windows/WindowsQGC.ico` |
+| Splash screen | 626×145 | `resources/SplashScreen.png` |
+
+### Session Change Summary (2026-07-01)
+
+Three commits on branch `zhuangzhouv508`:
+
+| Commit | Description |
+|--------|-------------|
+| `324a09f17` | Add `build-android.sh` — Android build script with NDK fix, RTSP video, CPM cache. Update `CLAUDE.md`. |
+| `601ac50a1` | Replace all app icons with `zhuangzhou.png`. |
+
+**Environment setup performed:**
+- Installed missing Qt Android modules via aqt: `qtcharts`, `qtlocation`, `qtmultimedia`, `qtpositioning`, `qtsensors`, `qtserialport`, `qtconnectivity`, `qtquick3d`, `qt5compat`, `qtspeech`
+- Pre-populated CPM cache at `build/cpm_cache/` with mavlink `c_library_v2`
+
+**Verified:** CMake configure passes (10s with cache), APK builds and installs on Redmi Note 12 5G (Android 14).
+Desktop build requires isolated pkg-config due to conda GStreamer path interference.
+
 ## CI
 
 Workflows in `.github/workflows/`. Linux CI: install Qt via `jurplel/install-qt-action@v4`, configure with `qt-cmake`, build, run tests with `xvfb-run -a ./QGroundControl --unittest`. Covers Linux, Windows, macOS, Android, iOS, Flatpak, Docker.
