@@ -134,6 +134,63 @@
     "enumStrings":      "Default,Force software decoder,Force NVIDIA decoder,Force VA-API decoder,Force DirectX3D 11 decoder,Force VideoToolbox decoder,Force Intel decoder,Force Vulkan decoder",
     "enumValues":       "0,1,2,3,4,5,6,7",
     "default":           0
+},
+{
+    "name":             "streamEnabled2",
+    "shortDesc": "Second Video Stream Enabled",
+    "longDesc":  "Enable/Disable second video stream.",
+    "type":             "bool",
+    "default":     false
+},
+{
+    "name":             "videoSource2",
+    "shortDesc": "Second video source",
+    "longDesc":  "Source for second video. UDP, TCP, RTSP and UVC Cameras may be supported depending on Vehicle and ground station version.",
+    "type":             "string",
+    "default":     ""
+},
+{
+    "name":             "udpUrl2",
+    "shortDesc": "Second Video UDP Url",
+    "longDesc":  "UDP url address and port to bind to for second video stream. Example: 0.0.0.0:5601",
+    "type":             "string",
+    "default":     ""
+},
+{
+    "name":             "rtspUrl2",
+    "shortDesc": "Second Video RTSP Url",
+    "longDesc":  "RTSP url address and port to bind to for second video stream. Example: rtsp://192.168.42.1:554/live",
+    "type":             "string",
+    "default":     ""
+},
+{
+    "name":             "tcpUrl2",
+    "shortDesc": "Second Video TCP Url",
+    "longDesc":  "TCP url address and port to bind to for second video stream. Example: 192.168.143.200:3001",
+    "type":             "string",
+    "default":     ""
+},
+{
+    "name":             "aspectRatio2",
+    "shortDesc": "Second Video Aspect Ratio",
+    "longDesc":  "Second Video Aspect Ratio (width / height). Use 0.0 to ignore it.",
+    "type":             "float",
+    "decimalPlaces":    6,
+    "default":     1.777777
+},
+{
+    "name":             "disableWhenDisarmed2",
+    "shortDesc": "Second Video Stream Disabled When Disarmed",
+    "longDesc":  "Disable second video stream when disarmed.",
+    "type":             "bool",
+    "default":     false
+},
+{
+    "name":             "lowLatencyMode2",
+    "shortDesc": "Second Video Low Latency Mode",
+    "longDesc":  "If this option is enabled, the rtpjitterbuffer is removed and the video sink is set to asynchronous mode, reducing the latency by about 200 ms.",
+    "type":             "bool",
+    "default":     false
 }
 ]
 }

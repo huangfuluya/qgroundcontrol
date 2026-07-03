@@ -53,19 +53,61 @@ Item {
         onTriggered:  QGroundControl.videoManager.startVideo()
     }
 
-    //-- Video Streaming
+    property bool _showingSecondVideo: false
+
+    //-- Video Streaming (first)
     FlightDisplayViewVideo {
         id:             videoStreaming
         anchors.fill:   parent
         useSmallFont:   _root.pipState.state !== _root.pipState.fullState
-        visible:        QGroundControl.videoManager.isStreamSource
+        visible:        QGroundControl.videoManager.isStreamSource && !_showingSecondVideo
     }
     //-- UVC Video (USB Camera or Video Device)
     Loader {
         id:             cameraLoader
         anchors.fill:   parent
-        visible:        QGroundControl.videoManager.isUvc
+        visible:        QGroundControl.videoManager.isUvc && !_showingSecondVideo
         source:         QGroundControl.videoManager.uvcEnabled ? "qrc:/qml/QGroundControl/FlightDisplay/FlightDisplayViewUVC.qml" : "qrc:/qml/QGroundControl/FlightDisplay//FlightDisplayViewDummy.qml"
+    }
+
+    //-- Second Video Stream (overlay, shown when toggled)
+    Rectangle {
+        id:             secondVideoOverlay
+        anchors.fill:   parent
+        color:          "black"
+        visible:        QGroundControl.videoManager.hasVideo2 && _showingSecondVideo
+
+        QGCVideoBackground {
+            id:             secondVideoDisplay
+            objectName:     "secondVideoContent"
+            anchors.fill:   parent
+        }
+
+        QGCLabel {
+            text:           qsTr("WAITING FOR SECOND VIDEO")
+            font.bold:      true
+            color:          "white"
+            font.pointSize: ScreenTools.smallFontPointSize
+            anchors.centerIn: parent
+            visible:        !QGroundControl.videoManager.decoding2
+        }
+    }
+
+    //-- Video switch button (only when second video is configured)
+    QGCButton {
+        text:               _showingSecondVideo ? qsTr("CH1") : qsTr("CH2")
+        visible:            QGroundControl.videoManager.hasVideo2
+        anchors.top:        parent.top
+        anchors.right:      parent.right
+        anchors.margins:    ScreenTools.defaultFontPixelWidth
+        width:              ScreenTools.defaultFontPixelWidth * 6
+        height:             ScreenTools.defaultFontPixelHeight * 2.5
+        z:                  QGroundControl.zOrderWidgets
+        opacity:            0.7
+        onClicked: {
+            _showingSecondVideo = !_showingSecondVideo
+            QGroundControl.videoManager.setSecondVideoActive(_showingSecondVideo)
+        }
     }
 
     QGCLabel {

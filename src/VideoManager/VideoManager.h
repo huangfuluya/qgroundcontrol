@@ -35,14 +35,20 @@ class VideoManager : public QObject
     Q_PROPERTY(bool     uvcEnabled              READ uvcEnabled                                 CONSTANT)
     Q_PROPERTY(bool     autoStreamConfigured    READ autoStreamConfigured                       NOTIFY autoStreamConfiguredChanged)
     Q_PROPERTY(bool     decoding                READ decoding                                   NOTIFY decodingChanged)
+    Q_PROPERTY(bool     decoding2               READ decoding2                                  NOTIFY decoding2Changed)
     Q_PROPERTY(bool     fullScreen              READ fullScreen             WRITE setfullScreen NOTIFY fullScreenChanged)
     Q_PROPERTY(bool     hasThermal              READ hasThermal                                 NOTIFY decodingChanged)
     Q_PROPERTY(bool     hasVideo                READ hasVideo                                   NOTIFY hasVideoChanged)
+    Q_PROPERTY(bool     hasVideo2               READ hasVideo2                                  NOTIFY hasVideo2Changed)
     Q_PROPERTY(bool     isStreamSource          READ isStreamSource                             NOTIFY isStreamSourceChanged)
+    Q_PROPERTY(bool     isStreamSource2         READ isStreamSource2                            NOTIFY isStreamSource2Changed)
     Q_PROPERTY(bool     isUvc                   READ isUvc                                      NOTIFY isUvcChanged)
+    Q_PROPERTY(bool     isUvc2                  READ isUvc2                                     NOTIFY isUvc2Changed)
     Q_PROPERTY(bool     recording               READ recording                                  NOTIFY recordingChanged)
     Q_PROPERTY(bool     streaming               READ streaming                                  NOTIFY streamingChanged)
+    Q_PROPERTY(bool     streaming2              READ streaming2                                 NOTIFY streaming2Changed)
     Q_PROPERTY(double   aspectRatio             READ aspectRatio                                NOTIFY aspectRatioChanged)
+    Q_PROPERTY(double   aspectRatio2            READ aspectRatio2                               NOTIFY aspectRatio2Changed)
     Q_PROPERTY(double   hfov                    READ hfov                                       NOTIFY aspectRatioChanged)
     Q_PROPERTY(double   thermalAspectRatio      READ thermalAspectRatio                         NOTIFY aspectRatioChanged)
     Q_PROPERTY(double   thermalHfov             READ thermalHfov                                NOTIFY aspectRatioChanged)
@@ -62,6 +68,7 @@ public:
     Q_INVOKABLE void startVideo();
     Q_INVOKABLE void stopRecording();
     Q_INVOKABLE void stopVideo();
+    Q_INVOKABLE void setSecondVideoActive(bool active);
 
     void init(QQuickWindow *rootWindow);
     void cleanup();
@@ -70,11 +77,17 @@ public:
     bool fullScreen() const { return _fullScreen; }
     bool hasThermal() const;
     bool hasVideo() const;
+    bool hasVideo2() const;
     bool isStreamSource() const;
+    bool isStreamSource2() const;
     bool isUvc() const;
+    bool isUvc2() const;
     bool recording() const { return _recording; }
     bool streaming() const { return _streaming; }
+    bool streaming2() const { return _streaming2; }
+    bool decoding2() const { return _decoding2; }
     double aspectRatio() const;
+    double aspectRatio2() const;
     double hfov() const;
     double thermalAspectRatio() const;
     double thermalHfov() const;
@@ -101,11 +114,18 @@ signals:
     void streamingChanged();
     void uvcVideoSourceIDChanged();
     void videoSizeChanged();
+    void hasVideo2Changed();
+    void decoding2Changed();
+    void streaming2Changed();
+    void isStreamSource2Changed();
+    void isUvc2Changed();
+    void aspectRatio2Changed();
 
 private slots:
     void _communicationLostChanged(bool communicationLost);
     void _setActiveVehicle(Vehicle *vehicle);
     void _videoSourceChanged();
+    void _secondVideoSourceChanged();
 
 private:
     void _initVideoReceiver(VideoReceiver *receiver, QQuickWindow *window);
@@ -129,6 +149,8 @@ private:
     QAtomicInteger<bool> _decoding = false;
     QAtomicInteger<bool> _recording = false;
     QAtomicInteger<bool> _streaming = false;
+    QAtomicInteger<bool> _decoding2 = false;
+    QAtomicInteger<bool> _streaming2 = false;
     QSize _videoSize;
     QString _imageFile;
     QString _uvcVideoSourceID;

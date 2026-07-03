@@ -115,6 +115,91 @@ SettingsPage {
         }
     }
 
+    //-- Second Video Source
+    SettingsGroupLayout {
+        Layout.fillWidth:   true
+        heading:            qsTr("Second Video Stream")
+        visible:            _videoSettings.streamEnabled2.visible
+
+        FactCheckBoxSlider {
+            Layout.fillWidth:   true
+            text:               qsTr("Enable Second Video Stream")
+            fact:               _videoSettings.streamEnabled2
+            visible:            fact.visible
+        }
+    }
+
+    SettingsGroupLayout {
+        Layout.fillWidth:   true
+        heading:            qsTr("Second Video Source")
+        visible:            _videoSettings.streamEnabled2.rawValue && !_videoAutoStreamConfig
+
+        LabelledFactComboBox {
+            Layout.fillWidth:   true
+            label:              qsTr("Source")
+            indexModel:         false
+            fact:               _videoSettings.videoSource2
+            visible:            fact.visible
+        }
+    }
+
+    SettingsGroupLayout {
+        Layout.fillWidth:   true
+        heading:            qsTr("Second Video Connection")
+        visible:            _videoSettings.streamEnabled2.rawValue && !_videoAutoStreamConfig
+
+        LabelledFactTextField {
+            Layout.fillWidth:           true
+            textFieldPreferredWidth:    _urlFieldWidth
+            label:                      qsTr("RTSP URL")
+            fact:                       _videoSettings.rtspUrl2
+            visible:                    _videoSettings.rtspUrl2.visible
+        }
+
+        LabelledFactTextField {
+            Layout.fillWidth:           true
+            label:                      qsTr("TCP URL")
+            textFieldPreferredWidth:    _urlFieldWidth
+            fact:                       _videoSettings.tcpUrl2
+            visible:                    _videoSettings.tcpUrl2.visible
+        }
+
+        LabelledFactTextField {
+            Layout.fillWidth:           true
+            textFieldPreferredWidth:    _urlFieldWidth
+            label:                      qsTr("UDP URL")
+            fact:                       _videoSettings.udpUrl2
+            visible:                    _videoSettings.udpUrl2.visible
+        }
+    }
+
+    SettingsGroupLayout {
+        Layout.fillWidth:   true
+        heading:            qsTr("Second Video Settings")
+        visible:            _videoSettings.streamEnabled2.rawValue
+
+        LabelledFactTextField {
+            Layout.fillWidth:   true
+            label:              qsTr("Aspect Ratio")
+            fact:               _videoSettings.aspectRatio2
+            visible:            !_videoAutoStreamConfig && _videoSettings.aspectRatio2.visible
+        }
+
+        FactCheckBoxSlider {
+            Layout.fillWidth:   true
+            text:               qsTr("Stop recording when disarmed")
+            fact:               _videoSettings.disableWhenDisarmed2
+            visible:            !_videoAutoStreamConfig && fact.visible
+        }
+
+        FactCheckBoxSlider {
+            Layout.fillWidth:   true
+            text:               qsTr("Low Latency Mode")
+            fact:               _videoSettings.lowLatencyMode2
+            visible:            !_videoAutoStreamConfig && fact.visible && _isGST
+        }
+    }
+
     SettingsGroupLayout {
         Layout.fillWidth: true
         heading:            qsTr("Local Video Storage")

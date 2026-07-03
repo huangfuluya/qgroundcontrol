@@ -9,7 +9,7 @@
 
 // 航行监控 - Navigation Monitor Tab
 // 主视图支持地图/视频双窗口切换，并保留基础模式的状态与操作叠加层
-// 左侧：紧凑状态条（6项指示器）
+// 左侧：紧凑状态条（6项指示器）+ 云台控制按钮面板（3行x2列，拍照/录像/变焦远/变焦近/夜视/补光）+ 圆形回中按钮
 // 右侧：快捷操作按钮（3个）
 // 底部：快捷模式切换按钮（4个，水平平铺）
 
@@ -40,6 +40,11 @@ Item {
     property var    planController:         _planController
     property var    guidedController:       guidedActionsController
     property real   _pipMargin:             ScreenTools.defaultFontPixelWidth * 0.75
+    //-- Servo/PWM control state
+    property int   _servoPulseChannel:     -1    ///< Channel waiting for reset pulse
+    property bool  _nightVisionOn:         false ///< Night vision toggle state
+    property bool  _fillLightOn:           false ///< Fill light toggle state
+    property int   _zoomPulseChannel:      -1    ///< Zoom channel, no ack wait
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
@@ -79,7 +84,7 @@ Item {
 
         PipView {
             id:                     _pipView
-            anchors.left:           leftStrip.right
+            anchors.left:           servoPanel.right
             anchors.bottom:         quickModeBar.top
             anchors.margins:        _pipMargin
             item1IsFullSettingsKey: "BasicModeMainFlyWindowIsMap"
@@ -246,6 +251,177 @@ Item {
             Item { Layout.fillHeight: true }
         }
     }
+
+    //-- Left Side: Servo/PWM Control Buttons (3x2 grid, to the right of status strip)
+    Rectangle {
+        id:                     servoPanel
+        anchors.left:           leftStrip.right
+        anchors.leftMargin:     _margins / 2
+        anchors.bottom:         quickModeBar.top
+        anchors.bottomMargin:   _margins
+        width:                  ScreenTools.defaultFontPixelWidth * 20
+        height:                 ScreenTools.defaultFontPixelHeight * 22
+        color:                  Qt.rgba(0, 0, 0, 0.55)
+        border.color:           Qt.rgba(1, 1, 1, 0.15)
+        radius:                 4
+        visible:                !QGroundControl.videoManager.fullScreen
+
+        DeadMouseArea {
+            anchors.fill: parent
+        }
+
+        GridLayout {
+            anchors.margins:    _margins / 2
+            anchors.fill:       parent
+            columns:            2
+            rows:               3
+            columnSpacing:      _margins / 2
+            rowSpacing:         _margins / 2
+
+            // Row 1, Col 1: Photo
+            QGCButton {
+                Layout.fillWidth:   true
+                Layout.fillHeight:  true
+                text:               qsTr("拍照")
+                font.pointSize:     ScreenTools.defaultFontPointSize
+                enabled:            _activeVehicle !== null
+                opacity:            0.5
+                backgroundColor:    "#4A90D9"
+                onClicked: {
+                    if (_activeVehicle) {
+                        _servoPulseChannel = 10
+                        _activeVehicle.sendCommand(1, 183, false, 10, 2000, 0, 0, 0, 0, 0)
+                    }
+                }
+            }
+
+            // Row 1, Col 2: Video
+            QGCButton {
+                Layout.fillWidth:   true
+                Layout.fillHeight:  true
+                text:               qsTr("录像")
+                font.pointSize:     ScreenTools.defaultFontPointSize
+                enabled:            _activeVehicle !== null
+                opacity:            0.5
+                backgroundColor:    "#4A90D9"
+                onClicked: {
+                    if (_activeVehicle) {
+                        _servoPulseChannel = 10
+                        _activeVehicle.sendCommand(1, 183, false, 10, 1000, 0, 0, 0, 0, 0)
+                    }
+                }
+            }
+
+            // Row 2, Col 1: Zoom Tele (no ack wait)
+            QGCButton {
+                Layout.fillWidth:   true
+                Layout.fillHeight:  true
+                text:               qsTr("变焦远")
+                font.pointSize:     ScreenTools.defaultFontPointSize
+                enabled:            _activeVehicle !== null
+                opacity:            0.5
+                backgroundColor:    "#4A90D9"
+                onClicked: {
+                    if (_activeVehicle) {
+                        _activeVehicle.sendCommand(1, 183, false, 9, 1000, 0, 0, 0, 0, 0)
+                        _zoomPulseChannel = 9
+                        zoomResetTimer.restart()
+                    }
+                }
+            }
+
+            // Row 2, Col 2: Zoom Wide (no ack wait)
+            QGCButton {
+                Layout.fillWidth:   true
+                Layout.fillHeight:  true
+                text:               qsTr("变焦近")
+                font.pointSize:     ScreenTools.defaultFontPointSize
+                enabled:            _activeVehicle !== null
+                opacity:            0.5
+                backgroundColor:    "#4A90D9"
+                onClicked: {
+                    if (_activeVehicle) {
+                        _activeVehicle.sendCommand(1, 183, false, 9, 2000, 0, 0, 0, 0, 0)
+                        _zoomPulseChannel = 9
+                        zoomResetTimer.restart()
+                    }
+                }
+            }
+
+            // Row 3, Col 1: Night Vision (toggle)
+            QGCButton {
+                Layout.fillWidth:   true
+                Layout.fillHeight:  true
+                text:               _nightVisionOn ? qsTr("夜视·开") : qsTr("夜视·关")
+                font.pointSize:     ScreenTools.defaultFontPointSize
+                enabled:            _activeVehicle !== null
+                opacity:            0.5
+                backgroundColor:    _nightVisionOn ? "#4A90D9" : "#2C5F8A"
+                onClicked: {
+                    if (_activeVehicle) {
+                        _nightVisionOn = !_nightVisionOn
+                        var pwm = _nightVisionOn ? 2000 : 1000
+                        _activeVehicle.sendCommand(1, 183, false, 11, pwm, 0, 0, 0, 0, 0)
+                    }
+                }
+            }
+
+            // Row 3, Col 2: Fill Light (toggle)
+            QGCButton {
+                Layout.fillWidth:   true
+                Layout.fillHeight:  true
+                text:               _fillLightOn ? qsTr("补光·开") : qsTr("补光·关")
+                font.pointSize:     ScreenTools.defaultFontPointSize
+                enabled:            _activeVehicle !== null
+                opacity:            0.5
+                backgroundColor:    _fillLightOn ? "#4A90D9" : "#2C5F8A"
+                onClicked: {
+                    if (_activeVehicle) {
+                        _fillLightOn = !_fillLightOn
+                        var pwm = _fillLightOn ? 2000 : 1000
+                        _activeVehicle.sendCommand(1, 183, false, 12, pwm, 0, 0, 0, 0, 0)
+                    }
+                }
+            }
+        }
+    }
+
+    //-- Camera Centering Button (circular, below servo panel)
+    Rectangle {
+        id:                     centerButton
+        anchors.top:            servoPanel.bottom
+        anchors.topMargin:      _margins / 2
+        anchors.horizontalCenter: servoPanel.horizontalCenter
+        width:                  ScreenTools.defaultFontPixelHeight * 5
+        height:                 width
+        radius:                 width / 2
+        color:                  "#4A90D9"
+        opacity:                0.5
+        visible:                !QGroundControl.videoManager.fullScreen
+        border.color:           Qt.rgba(1, 1, 1, 0.3)
+
+        DeadMouseArea {
+            anchors.fill: parent
+        }
+
+        QGCLabel {
+            anchors.centerIn:   parent
+            text:               qsTr("回中")
+            font.pointSize:     ScreenTools.defaultFontPointSize
+            color:              "white"
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            enabled: _activeVehicle !== null
+            onClicked: {
+                if (_activeVehicle) {
+                    _activeVehicle.sendCommand(1, 205, false, 0, 0, 0, 0, 0, 0, 1)
+                }
+            }
+        }
+    }
+
 
     //-- Right Side: Action Buttons (individual floating items)
     Rectangle {
@@ -491,6 +667,46 @@ Item {
         target: QGroundControl.corePlugin
         function onShowAdvancedUIChanged(show) { modeSwitch.checked = show }
     }
+
+    //-- Zoom pulse reset timer (fires 0.5s after command, no ack wait)
+    Timer {
+        id:         zoomResetTimer
+        interval:   500
+        repeat:     false
+        onTriggered: {
+            if (_activeVehicle && _zoomPulseChannel > 0) {
+                var ch = _zoomPulseChannel
+                _zoomPulseChannel = -1
+                _activeVehicle.sendCommand(1, 183, false, ch, 1500, 0, 0, 0, 0, 0)
+            }
+        }
+    }
+
+    //-- Servo pulse reset timer (fires 1s after successful command ack)
+    Timer {
+        id:         servoResetTimer
+        interval:   1000
+        repeat:     false
+        onTriggered: {
+            if (_activeVehicle && _servoPulseChannel > 0) {
+                var ch = _servoPulseChannel
+                _servoPulseChannel = -1
+                _activeVehicle.sendCommand(1, 183, false, ch, 1500, 0, 0, 0, 0, 0)
+            }
+        }
+    }
+
+    //-- Listen for MAVLink command acknowledgements
+    Connections {
+        target: _activeVehicle
+        function onMavCommandResult(vehicleId, comp, cmd, result, code) {
+            // MAV_CMD_DO_SET_SERVO (183): if pulse command succeeded, start reset timer
+            if (cmd === 183 && result === 0 /* MAV_RESULT_ACCEPTED */ && _servoPulseChannel > 0) {
+                servoResetTimer.start()
+            }
+        }
+    }
+
 
     // Guided value slider (required for actions that need slider input)
     // Declared after all overlays to ensure it renders on top
