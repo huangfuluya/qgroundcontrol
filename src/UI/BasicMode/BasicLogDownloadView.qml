@@ -29,6 +29,40 @@ Item {
     property var    _activeVehicle:     QGroundControl.multiVehicleManager.activeVehicle
     property real   _margins:           ScreenTools.defaultFontPixelWidth
     property bool   _hasVehicle:        _activeVehicle !== null && !_activeVehicle.isOfflineEditingVehicle
+    property string _statusMessage:     ""
+    property int    _prevModelCount:    0
+
+    Timer {
+        id:             _requestTimeout
+        interval:       10000
+        repeat:         false
+        onTriggered: {
+            if (logDownloadController.model.count === _prevModelCount) {
+                _statusMessage = qsTr("飞控未响应，可能不支持日志下载")
+            }
+        }
+    }
+
+    Timer {
+        id:             _modelCheckTimer
+        interval:       500
+        running:        _prevModelCount > 0 && _statusMessage !== ""
+        repeat:         true
+        onTriggered: {
+            if (logDownloadController.model.count > _prevModelCount) {
+                _requestTimeout.stop()
+                _statusMessage = ""
+                _prevModelCount = 0
+            }
+        }
+    }
+
+    function _doRefresh() {
+        _prevModelCount = logDownloadController.model.count
+        _statusMessage = qsTr("正在请求日志列表…")
+        _requestTimeout.restart()
+        logDownloadController.refresh()
+    }
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
@@ -73,18 +107,23 @@ Item {
                     QGCLabel { text: qsTr("状态"); Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 10 }
                 }
 
-                Rectangle {
+                Item {
                     Layout.fillWidth:   true
                     Layout.fillHeight:  true
-                    color:              qgcPal.text
-                    opacity:            0.05
-                    radius:             2
+
+                    Rectangle {
+                        anchors.fill:   parent
+                        color:          qgcPal.text
+                        opacity:        0.05
+                        radius:         2
+                    }
 
                     QGCFlickable {
-                        anchors.fill:       parent
-                        anchors.margins:    2
-                        contentHeight:      onboardLogColumn.height
-                        clip:               true
+                        id:             onboardLogFlickable
+                        anchors.fill:   parent
+                        anchors.margins: 2
+                        contentHeight:  onboardLogColumn.height
+                        clip:           true
 
                         Column {
                             id:     onboardLogColumn
@@ -100,10 +139,8 @@ Item {
 
                                     QGCCheckBox {
                                         Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 6
-                                        Binding on checkState {
-                                            value: object.selected ? Qt.Checked : Qt.Unchecked
-                                        }
-                                        onClicked: object.selected = checked
+                                        checked:                object.selected
+                                        onClicked:              object.selected = !object.selected
                                     }
 
                                     QGCLabel {
@@ -133,6 +170,16 @@ Item {
                             }
                         }
                     }
+
+                    // Status overlay: visible when no vehicle or status message active
+                    QGCLabel {
+                        anchors.centerIn:   parent
+                        visible:            !_hasVehicle || _statusMessage !== "" || (logDownloadController.model.count === 0 && _hasVehicle && _statusMessage === "")
+                        text:               !_hasVehicle ? qsTr("请先连接飞控")
+                                                          : (_statusMessage !== "" ? _statusMessage : qsTr("点击刷新获取日志列表"))
+                        font.pointSize:     ScreenTools.defaultFontPointSize
+                        color:              !_hasVehicle ? "#AAAAAA" : qgcPal.colorGreen
+                    }
                 }
 
                 // Onboard log buttons
@@ -143,7 +190,7 @@ Item {
                     QGCButton {
                         text:       qsTr("刷新")
                         enabled:    _hasVehicle && !logDownloadController.requestingList && !logDownloadController.downloadingLogs
-                        onClicked:  logDownloadController.refresh()
+                        onClicked:  _doRefresh()
                     }
 
                     QGCButton {

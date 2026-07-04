@@ -235,3 +235,16 @@ QGC 使用 `rtspsrc` 元素（来自 `gst-plugins-good`）处理 RTSP。确保�
 
 - **文件**: `FlyViewVideo.qml` 第 96-111 行
 - `"CH1"/"CH2"` 动态切换 → 固定 `"摄像头切换"`
+- 按钮宽度 `×6` → `×14`（适配 5 字中文）
+
+### 日志下载界面修复 (2026-07-04)
+
+**文件**: `src/UI/BasicMode/BasicLogDownloadView.qml`
+
+1. **状态反馈**: 新增 `_statusMessage` + 10 秒超时 `Timer` + 500ms 轮询检测
+   - 未连接: "请先连接飞控"
+   - 请求中: "正在请求日志列表…"
+   - 超时: "飞控未响应，可能不支持日志下载"
+2. **复选框修复**: `Binding on checkState` → `checked: object.selected`（避免内部状态冲突导致灰色不可选）
+3. **列表文字颜色**: 外层 `Rectangle` 的 `opacity: 0.05` 级联影响子元素 → 拆分为独立背景 `Rectangle` + 内容 `Item`
+4. **黑屏修复**: 移除 `on_prevModelCountChanged`（QML 下划线属性命名不兼容）→ 改用轮询 `Timer`

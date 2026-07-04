@@ -100,7 +100,7 @@ Item {
         anchors.top:        parent.top
         anchors.right:      parent.right
         anchors.margins:    ScreenTools.defaultFontPixelWidth
-        width:              ScreenTools.defaultFontPixelWidth * 6
+        width:              ScreenTools.defaultFontPixelWidth * 14
         height:             ScreenTools.defaultFontPixelHeight * 2.5
         z:                  QGroundControl.zOrderWidgets
         opacity:            0.7
