@@ -95,7 +95,7 @@ Item {
 
     //-- Video switch button (only when second video is configured)
     QGCButton {
-        text:               _showingSecondVideo ? qsTr("CH1") : qsTr("CH2")
+        text:               qsTr("摄像头切换")
         visible:            QGroundControl.videoManager.hasVideo2
         anchors.top:        parent.top
         anchors.right:      parent.right

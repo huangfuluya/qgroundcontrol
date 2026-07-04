@@ -181,25 +181,35 @@ Item {
 
             Item { Layout.fillHeight: true }
 
-            // Battery
+            // Voltage
             ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
                 spacing:         0
                 QGCLabel {
-                    text:           qsTr("电量")
+                    text:           qsTr("电压")
                     font.pointSize: ScreenTools.smallFontPointSize
                     color:          "#AAAAAA"
                     Layout.alignment: Qt.AlignHCenter
                 }
                 QGCLabel {
-                    text:           (_activeVehicle && _activeVehicle.batteryPercent && _activeVehicle.batteryPercent.value !== undefined) ? _activeVehicle.batteryPercent.value.toFixed(0) + "%" : "--"
+                    text: {
+                        if (!_activeVehicle || !_activeVehicle.batteries || _activeVehicle.batteries.count === 0) return "--V"
+                        var battery = _activeVehicle.batteries.get(0)
+                        if (!battery || !battery.voltage || isNaN(battery.voltage.rawValue)) return "--V"
+                        return battery.voltage.valueString + battery.voltage.units
+                    }
                     font.pointSize: ScreenTools.defaultFontPointSize
                     font.bold:      true
                     color: {
-                        if (!_activeVehicle || !_activeVehicle.batteryPercent || _activeVehicle.batteryPercent.value === undefined) return "#AAAAAA"
-                        var pct = _activeVehicle.batteryPercent.value
-                        if (pct < 20) return "red"
-                        if (pct < 50) return "orange"
+                        if (!_activeVehicle || !_activeVehicle.batteries || _activeVehicle.batteries.count === 0) return "#AAAAAA"
+                        var battery = _activeVehicle.batteries.get(0)
+                        if (!battery || !battery.voltage || isNaN(battery.voltage.rawValue)) return "#AAAAAA"
+                        // Use percentRemaining for color if available, otherwise green
+                        if (battery.percentRemaining && !isNaN(battery.percentRemaining.rawValue)) {
+                            var pct = battery.percentRemaining.rawValue
+                            if (pct < 20) return "red"
+                            if (pct < 50) return "orange"
+                        }
                         return qgcPal.colorGreen
                     }
                     Layout.alignment: Qt.AlignHCenter
@@ -519,7 +529,7 @@ Item {
         anchors.bottom:             parent.bottom
         anchors.bottomMargin:       _margins
         anchors.horizontalCenter:   parent.horizontalCenter
-        width:                      ScreenTools.defaultFontPixelWidth * 62
+        width:                      ScreenTools.defaultFontPixelWidth * 50
         height:                     ScreenTools.defaultFontPixelHeight * 5
         color:                      Qt.rgba(0, 0, 0, 0.6)
         border.color:               Qt.rgba(1, 1, 1, 0.15)
@@ -544,22 +554,13 @@ Item {
                 onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Manual" }
             }
             QGCButton {
-                text:               qsTr("悬停模式")
+                text:               qsTr("抛锚模式")
                 font.pointSize:     ScreenTools.defaultFontPointSize
                 Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 3
                 Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 13
                 enabled:            _activeVehicle !== null && _activeVehicle.flightMode !== "Loiter"
                 backgroundColor:    "#4A90D9"
                 onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Loiter" }
-            }
-            QGCButton {
-                text:               qsTr("保持模式")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 3
-                Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 13
-                enabled:            _activeVehicle !== null && _activeVehicle.flightMode !== "Hold"
-                backgroundColor:    "#4A90D9"
-                onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Hold" }
             }
             QGCButton {
                 text:               qsTr("自动模式")

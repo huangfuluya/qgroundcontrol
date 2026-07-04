@@ -205,3 +205,33 @@ QGC 使用 `rtspsrc` 元素（来自 `gst-plugins-good`）处理 RTSP。确保�
 - `gstrtsp.dll`, `gstrtspclientsink.dll` (RTSP 协议)
 - `gstrtp.dll`, `gstrtpmanager.dll`, `gstrtpmanagerbad.dll`, `gstrtponvif.dll` (RTP 传输)
 - `gstsrtp.dll`, `gstrsrtp.dll` (SRTP 加密)
+
+---
+
+## 基本模式 UI 定制 (2026-07-04)
+
+以下为针对无人船场景对 `src/UI/BasicMode/BasicFlyView.qml` 的定制修改：
+
+### 底部快捷模式按钮
+
+| 按钮 | 变更 | 飞行模式值 |
+|------|------|-----------|
+| 手动模式 | 保留 | `"Manual"` |
+| 悬停模式 → **抛锚模式** | 改名 | `"Loiter"` |
+| ~~保持模式~~ | **已删除** | `"Hold"` |
+| 自动模式 | 保留 | `"Auto"` |
+
+容器宽度从 `×62` 调整为 `×50`（适配 3 按钮布局）。
+
+### 左侧状态栏：电量 → 电压
+
+- **文件**: `FlyViewVideo.qml` 第 96-111 行
+- **标签**: `"电量"` → `"电压"`
+- **数据源**: `_activeVehicle.batteryPercent`（不存在，始终 `"--"`）→ `_activeVehicle.batteries.get(0).voltage`（从飞控 `BATTERY_STATUS` 消息获取）
+- **显示格式**: `16.8V`（`voltage.valueString + voltage.units` 自动格式化）
+- **颜色**: 有 `percentRemaining` 时按百分比变色，否则绿色
+
+### 视频切换按钮
+
+- **文件**: `FlyViewVideo.qml` 第 96-111 行
+- `"CH1"/"CH2"` 动态切换 → 固定 `"摄像头切换"`
