@@ -323,3 +323,29 @@ src/VideoManager/VideoReceiver/GStreamer/gstqml6gl/qt6/qt6glitem.cc     (+3/-1)
 2. **复选框修复**: `Binding on checkState` → `checked: object.selected`（避免内部状态冲突导致灰色不可选）
 3. **列表文字颜色**: 外层 `Rectangle` 的 `opacity: 0.05` 级联影响子元素 → 拆分为独立背景 `Rectangle` + 内容 `Item`
 4. **黑屏修复**: 移除 `on_prevModelCountChanged`（QML 下划线属性命名不兼容）→ 改用轮询 `Timer`
+
+### 删除紧急停船按钮 (2026-07-04)
+
+**文件**: `src/UI/BasicMode/BasicFlyView.qml`
+
+从右侧快捷操作按钮栏中删除了"紧急停船"按钮：
+
+- 删除 `btnStop` Rectangle 及内部的 `QGCButton`（原来位于 RTL 和锁定按钮之间）
+- 删除 `confirmStopDialog` MessageDialog 确认对话框
+- 将"锁定/解锁"按钮（`btnArm`）的锚点从 `btnStop.bottom` 改为 `btnRTL.bottom`，保持布局连续
+
+### 一键返航按钮行为分析 (2026-07-04)
+
+**文件**: `src/UI/BasicMode/BasicFlyView.qml` + C++ 固件插件
+
+点击"一键返航"按钮的完整调用链：
+
+| 步骤 | 位置 | 动作 |
+|------|------|------|
+| ① UI 确认 | `BasicFlyView.qml:460` | 弹出确认对话框 `confirmRTLDialog` |
+| ② 调用 Vehicle | `Vehicle.cc:2088` | `Vehicle::guidedModeRTL(false)` 检查引导模式支持 |
+| ③ 固件分发 | `APMFirmwarePlugin.cc:844` / `PX4FirmwarePlugin.cc:309` | APM → `RTL` 模式，PX4 → `AUTO_RTL` 模式 |
+| ④ 模式切换+验证 | `FirmwarePlugin.cc:263` | `_setFlightModeAndValidate` 发送 MAVLink `SET_MODE` 命令，最多重试3次，每次等待1.3秒 |
+| ⑤ 飞控执行 | 飞控固件 | 自主导航返回 home 点 |
+
+

@@ -462,35 +462,8 @@ Item {
     }
 
     Rectangle {
-        id:                     btnStop
-        anchors.top:            btnRTL.bottom
-        anchors.topMargin:      _margins
-        anchors.right:          parent.right
-        anchors.rightMargin:    _margins
-        width:                  ScreenTools.defaultFontPixelWidth * 16
-        height:                 ScreenTools.defaultFontPixelHeight * 4
-        color:                  Qt.rgba(0, 0, 0, 0.55)
-        border.color:           Qt.rgba(1, 1, 1, 0.15)
-        radius:                 4
-        visible:                !QGroundControl.videoManager.fullScreen
-
-        DeadMouseArea {
-            anchors.fill: parent
-        }
-
-        QGCButton {
-            anchors.fill:       parent
-            text:               qsTr("紧急停船")
-            font.pointSize:     ScreenTools.largeFontPointSize
-            enabled:            _activeVehicle !== null
-            backgroundColor:    "#C0392B"
-            onClicked: { if (_activeVehicle) confirmStopDialog.open() }
-        }
-    }
-
-    Rectangle {
         id:                     btnArm
-        anchors.top:            btnStop.bottom
+        anchors.top:            btnRTL.bottom
         anchors.topMargin:      _margins
         anchors.right:          parent.right
         anchors.rightMargin:    _margins
@@ -582,16 +555,6 @@ Item {
         buttons:    MessageDialog.Yes | MessageDialog.No
         onButtonClicked: function (button, role) {
             if (button === MessageDialog.Yes && _activeVehicle) { _activeVehicle.guidedModeRTL() }
-        }
-    }
-
-    MessageDialog {
-        id:         confirmStopDialog
-        title:      qsTr("确认操作")
-        text:       qsTr("确定要紧急停船吗？\n无人船将立即切换到保持模式并原地待命。")
-        buttons:    MessageDialog.Yes | MessageDialog.No
-        onButtonClicked: function (button, role) {
-            if (button === MessageDialog.Yes && _activeVehicle) { _activeVehicle.flightMode = "Hold" }
         }
     }
 
