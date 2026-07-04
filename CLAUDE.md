@@ -108,3 +108,87 @@ build/windows-cross/
 
 - `src/GPS/definitions.h`: timespec `#if (_MSC_VER)` → `#if defined(_MSC_VER) &&`
 - `deploy/windows/QGroundControl.rc`: icon 路径 `./WindowsQGC.ico` → `deploy/windows/WindowsQGC.ico`
+- `src/AutoPilotPlugins/Common/RadioComponentController.cc`: `RC_TYPE_SPEKTRUM_DSM2`/`RC_TYPE_SPEKTRUM_DSMX` → `RC_TYPE_SPEKTRUM` (新版 MAVLink 合并了这两个常量)
+
+---
+
+## Windows 原生编译 (2026-07-04)
+
+### `build-windows.ps1`
+
+Windows 原生一键编译+部署脚本，支持 PowerShell 5.1+。
+
+```powershell
+.\build-windows.ps1                        # Release 编译+部署
+.\build-windows.ps1 -CleanBuild -Force     # 清理后重建(非交互)
+.\build-windows.ps1 -Package               # 编译+打包 NSIS 安装器
+.\build-windows.ps1 -BuildType Debug       # Debug 构建
+.\build-windows.ps1 -Jobs 8                # 指定并行数
+.\build-windows.ps1 -QtPath "D:\Qt\6.8.3\msvc2022_64"  # 手动指定 Qt 路径
+```
+
+**6 步流程**: `检测环境 → 验证 MSVC → CMake 配置 → 编译 → 部署运行时 → (可选)打包`
+
+### 环境检测
+
+- **VS 2022**: `vswhere.exe` → 手动搜索常见路径
+- **Ninja**: 优先 VS 内置 (`Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\`)，验证 PATH 中版本可用性（排除损坏的 WinGet 版本）
+- **CMake**: PATH 查找 ≥ 3.25
+- **Qt 6.8.3**: `$QtPath` 参数 → `QT_ROOT_DIR` 环境变量 → `CMAKE_PREFIX_PATH` → 常见路径搜索 → `C:\Qt` 递归扫描
+- **GStreamer 1.22.12**: 环境变量 → 常见路径；未找到仅警告不阻断
+- **Git + GitHub 连通性**: `[System.Net.WebRequest]` 超时 10s 测试，检查代理配置
+
+### MSVC 环境
+
+通过临时 `.bat` 文件封装 `vcvars64.bat` + `cmake`，确保编译器环境变量正确传递。所有 cmake 调用都走此封装。
+
+### CMake 配置
+
+- 生成器: `Ninja Multi-Config` (Ninja 可用时) / `Visual Studio 17 2022` (回退)
+- Toolchain: `qt.toolchain.cmake`
+- 参数: `-DQGC_STABLE_BUILD=OFF -DQGC_BUILD_TESTING=OFF`
+- GStreamer 检测: 自动传递 `-DGSTREAMER_ROOT`；未找到由脚本提示安装
+
+### 运行时部署 (Step 5)
+
+| 步骤 | 工具/操作 | 部署内容 |
+|------|----------|---------|
+| Qt 部署 | `windeployqt --release --qmldir src` | 55 个 Qt6 DLL + QML 模块 + 18 个插件目录 + 翻译文件 |
+| GStreamer 部署 | 全量复制 `bin/*.dll` | 所有运行时 DLL (186+) |
+| GStreamer 插件 | 复制 `lib/gstreamer-1.0/*.dll` | 236 个插件到 `gstreamer-1.0/` 子目录 |
+
+### 环境准备
+
+**GStreamer 安装** (需要管理员权限):
+```powershell
+.\tools\setup\install-dependencies-windows.ps1
+```
+或手动下载安装:
+- `gstreamer-1.0-msvc-x86_64-1.22.12.msi`
+- `gstreamer-1.0-devel-msvc-x86_64-1.22.12.msi`
+来源: `https://gstreamer.freedesktop.org/data/pkg/windows/1.22.12/msvc/`
+
+**Git 代理配置** (如果直连 GitHub 失败):
+```powershell
+git config --global http.proxy http://127.0.0.1:7897
+git config --global https.proxy http://127.0.0.1:7897
+```
+
+### 产物结构
+
+```
+build/qt6-Windows/
+├── Release/
+│   ├── QGroundControl.exe              ← 38.83 MB
+│   ├── Qt6*.dll × 55+                  ← windeployqt 部署
+│   ├── gst*.dll, glib*.dll, ...        ← GStreamer 运行时
+│   ├── D3Dcompiler_47.dll, opengl32sw.dll
+│   ├── gstreamer-1.0/ (236 plugins)
+│   ├── platforms/qwindows.dll
+│   ├── qml/ (QML 模块)
+│   ├── translations/ (*.qm)
+│   └── imageformats/, sqldrivers/, ... (Qt 插件)
+├── Debug/
+├── cpm_modules/                        ← CPM 包缓存
+└── build-Release.ninja
+```

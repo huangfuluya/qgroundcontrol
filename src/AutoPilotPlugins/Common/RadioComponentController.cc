@@ -619,7 +619,7 @@ void RadioComponentController::_setInternalCalibrationValuesFromParameters()
 
 void RadioComponentController::spektrumBindMode(int mode)
 {
-    const int rxType = mode == DSM2 ? RC_TYPE_SPEKTRUM_DSM2 : RC_TYPE_SPEKTRUM_DSMX;
+    const int rxType = RC_TYPE_SPEKTRUM;
     _vehicle->pairRX(rxType, mode);
 }
 
