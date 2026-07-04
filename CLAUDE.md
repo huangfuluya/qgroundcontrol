@@ -206,6 +206,53 @@ QGC 使用 `rtspsrc` 元素（来自 `gst-plugins-good`）处理 RTSP。确保�
 - `gstrtp.dll`, `gstrtpmanager.dll`, `gstrtpmanagerbad.dll`, `gstrtponvif.dll` (RTP 传输)
 - `gstsrtp.dll`, `gstrsrtp.dll` (SRTP 加密)
 
+### RTSP 视频流卡顿修复 (2026-07-04)
+
+**问题**: QGC 查看 RTSP 视频流时画面卡顿，但 VLC 拉同一路流非常流畅。
+
+**根因**: 共发现 10 个问题，涵盖网络缓冲层、解码层、渲染层三个层面：
+
+#### 网络缓冲层 (GstVideoReceiver.cc)
+
+| # | 问题 | 原值 | 修复后 | 影响 |
+|---|------|------|--------|------|
+| 1 | `rtspsrc latency` 太低 | 固定 25ms | 低延迟=50ms，正常=200ms | **最大影响** — 25ms 抖动缓冲无法吸收网络抖动 |
+| 2 | 低延迟模式跳过 `rtpjitterbuffer` | `_buffer = -1` 时不创建 | 总是创建，最少 50ms | 任何网络包延迟波动都直接导致卡顿 |
+| 3 | `rtspsrc` 缺少丢帧/重传 | 无 | `drop-on-latency=TRUE`, `do-retransmission=TRUE` | 超时帧不等待 + RTP 丢包重传 |
+| 4 | `rtpjitterbuffer` 未配置 | 创建后无属性 | `latency=_buffer`, `do-retransmission=TRUE` | jitter buffer 知道预期延迟 |
+
+#### 解码层 (GstVideoReceiver.cc)
+
+| # | 问题 | 原值 | 修复后 |
+|---|------|------|--------|
+| 5 | 解码队列无大小限制 | 未配置 | max-buffers=60(2s@30fps), max-time=2s, leaky=2 |
+| 6 | 录制队列无大小限制 | 未配置 | max-buffers=30, max-time=500ms, leaky=2 |
+| 7 | `decodebin3` 低延迟模式 | 未启用 | `low-latency=TRUE` (GStreamer ≥1.24) |
+| 8 | 无 processing-deadline | 未设置 | qml6glsink 设置 33ms deadline (≈30fps) |
+
+#### 渲染层
+
+| # | 文件 | 问题 | 修复 |
+|---|------|------|------|
+| 9 | `gstqml6glsink.cc` | GL buffer pool 最小 2 | 增加到 4，避免 Qt Scene Graph 持帧导致的管线阻塞 |
+| 10 | `qt6glitem.cc` | `updatePaintNode` 每帧调 `setCaps` | 移除冗余调用，setCaps 仅 caps 变化时需要 |
+
+#### 尚未修复但需要注意的问题
+
+| # | 问题 | 建议 |
+|---|------|------|
+| A | **QueuedConnection update() 合并** | Qt 合并排队 update()，30fps 时可能丢帧 |
+| B | **Windows 可能用软解码** | 优先将 `forceVideoDecoder` 设为 `DirectX3D` |
+| C | **GL fence 同步阻塞渲染线程** | `gstqsg6glnode.cc:151` `gst_gl_sync_meta_wait` 每帧阻塞 |
+
+#### 修改文件清单
+
+```
+src/VideoManager/VideoReceiver/GStreamer/GstVideoReceiver.cc      (+67/-3)
+src/VideoManager/VideoReceiver/GStreamer/gstqml6gl/qt6/gstqml6glsink.cc (+3/-2)
+src/VideoManager/VideoReceiver/GStreamer/gstqml6gl/qt6/qt6glitem.cc     (+3/-1)
+```
+
 ---
 
 ## 基本模式 UI 定制 (2026-07-04)

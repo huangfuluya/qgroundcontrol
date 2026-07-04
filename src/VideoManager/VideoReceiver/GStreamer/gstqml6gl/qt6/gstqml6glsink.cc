@@ -538,8 +538,9 @@ gst_qml6_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       goto config_failed;
   }
 
-  /* we need at least 2 buffer because we hold on to the last one */
-  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  /* we need at least 4 buffers to avoid stalling the pipeline while
+   * Qt scene graph holds on to previous frames */
+  gst_query_add_allocation_pool (query, pool, size, 4, 0);
   if (pool)
     gst_object_unref (pool);
 

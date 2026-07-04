@@ -332,7 +332,9 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     old_buffer = NULL;
   }
 
-  texNode->setCaps (this->priv->caps);
+  // setCaps is only needed when caps actually change; avoid per-frame re-parsing.
+  // setBuffer internally checks buffer_changed via gst_buffer_replace so it
+  // is already a no-op when the buffer is unchanged.
   texNode->setBuffer (this->priv->buffer);
 
   if (this->priv->force_aspect_ratio && this->priv->caps) {

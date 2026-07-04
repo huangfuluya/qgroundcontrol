@@ -26,6 +26,7 @@
 #include <QtQuick/QQuickItem>
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
 QGC_LOGGING_CATEGORY(GstVideoReceiverLog, "qgc.videomanager.videoreceiver.gstreamer.gstvideoreceiver")
 
@@ -70,9 +71,11 @@ void GstVideoReceiver::start(uint32_t timeout)
     }
 
     _timeout = timeout;
-    _buffer = lowLatency() ? -1 : 0;
+    // Use a reasonable lower jitter buffer even in low-latency mode.
+    // -1 (no jitter buffer) causes visible stutter on RTSP streams.
+    _buffer = lowLatency() ? 50 : 200;
 
-    qCDebug(GstVideoReceiverLog) << "Starting" << _uri << ", lowLatency" << lowLatency() << ", timeout" << _timeout;
+    qCDebug(GstVideoReceiverLog) << "Starting" << _uri << ", lowLatency" << lowLatency() << ", timeout" << _timeout << ", buffer" << _buffer;
 
     _endOfStream = false;
 
@@ -106,6 +109,20 @@ void GstVideoReceiver::start(uint32_t timeout)
             break;
         }
 
+        // Limit queue size to prevent unbounded latency build-up.
+        // Enough buffering for smooth decode but not so much that latency
+        // grows over time.
+        // Use leaky=2 (downstream) with generous limits: downstream leak
+        // drops the oldest frames first, so keyframes are only dropped if
+        // the queue is completely full for the entire GOP duration. With
+        // 60 buffers (~2s at 30fps) this covers most GOP sizes.
+        g_object_set(decoderQueue,
+                     "max-size-buffers", 60,
+                     "max-size-time",   static_cast<guint64>(2000 * GST_MSECOND),
+                     "max-size-bytes",  32 * 1024 * 1024,
+                     "leaky",           2, // leak downstream (drop old buffers)
+                     nullptr);
+
         _decoderValve = gst_element_factory_make("valve", nullptr);
         if (!_decoderValve)  {
             qCCritical(GstVideoReceiverLog) << "gst_element_factory_make('valve') failed";
@@ -121,6 +138,13 @@ void GstVideoReceiver::start(uint32_t timeout)
             qCCritical(GstVideoReceiverLog) << "gst_element_factory_make('queue') failed";
             break;
         }
+
+        g_object_set(recorderQueue,
+                     "max-size-buffers", 30,
+                     "max-size-time",   static_cast<guint64>(500 * GST_MSECOND),
+                     "max-size-bytes",  16 * 1024 * 1024,
+                     "leaky",           2, // leak downstream
+                     nullptr);
 
         _recorderValve = gst_element_factory_make("valve", nullptr);
         if (!_recorderValve) {
@@ -663,7 +687,9 @@ GstElement *GstVideoReceiver::_makeSource(const QString &input)
 
             g_object_set(source,
                          "location", input.toUtf8().constData(),
-                         "latency", 25,
+                         "latency", _buffer,
+                         "drop-on-latency", TRUE,
+                         "do-retransmission", TRUE,
                          "udp-reconnect", TRUE,
                          "timeout", kRtspUdpReconnectTimeoutUs,
                          nullptr);
@@ -769,6 +795,13 @@ GstElement *GstVideoReceiver::_makeSource(const QString &input)
                     break;
                 }
 
+                // Set jitter buffer latency to match the expected network jitter.
+                // Lower values = less latency but more sensitive to jitter.
+                g_object_set(buffer,
+                             "latency", static_cast<guint>(_buffer),
+                             "do-retransmission", TRUE,
+                             nullptr);
+
                 (void) gst_bin_add(GST_BIN(bin), buffer);
 
                 if (!gst_element_link_many(source, buffer, parser, nullptr)) {
@@ -809,7 +842,15 @@ GstElement *GstVideoReceiver::_makeDecoder(GstCaps *caps, GstElement *videoSink)
     GstElement *decoder = gst_element_factory_make("decodebin3", nullptr);
     if (!decoder) {
         qCCritical(GstVideoReceiverLog) << "gst_element_factory_make('decodebin3') failed";
+        return nullptr;
     }
+
+    // Prefer low-latency decoding: skip B-frames, prefer speed over quality.
+    // The low-latency property is available since GStreamer 1.24;
+    // it will be silently ignored on older versions.
+    g_object_set(decoder,
+                 "low-latency", TRUE,
+                 nullptr);
 
     return decoder;
 }
@@ -1017,6 +1058,29 @@ bool GstVideoReceiver::_addVideoSink(GstPad *pad)
                  "widget", _widget,
                  "sync", (_buffer >= 0),
                  NULL);
+
+    // Set a processing-deadline on the actual video sink (qml6glsink inside
+    // qgcvideosinkbin -> glsinkbin) so that hardware decoders can skip frames
+    // when the decode+render time exceeds the deadline. This prevents the
+    // decode pipeline from falling behind and causing stutter.
+    {
+        GstElement *glsinkbin = gst_bin_get_by_name(GST_BIN(_videoSink), "glsinkbin");
+        if (glsinkbin) {
+            GstElement *qmlsink = gst_bin_get_by_name(GST_BIN(glsinkbin), "qmlglsink");
+            if (!qmlsink) {
+                qmlsink = gst_bin_get_by_name(GST_BIN(glsinkbin), "qml6glsink");
+            }
+            if (qmlsink && GST_IS_BASE_SINK(qmlsink)) {
+                // 33ms deadline = ~30fps maximum. Frames that cannot be decoded
+                // and rendered within this window may be dropped by the decoder.
+                gst_base_sink_set_processing_deadline(
+                    GST_BASE_SINK_CAST(qmlsink),
+                    static_cast<GstClockTime>(GST_SECOND / 30));
+            }
+            if (qmlsink) gst_object_unref(qmlsink);
+            gst_object_unref(glsinkbin);
+        }
+    }
 
     (void) gst_element_sync_state_with_parent(_videoSink);
 
