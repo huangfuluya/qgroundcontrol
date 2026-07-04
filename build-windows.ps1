@@ -612,38 +612,57 @@ if (-not (Test-Path $exeFile)) {
         Write-Warn "windeployqt not found at $windeployqt"
     }
 
-    # 5b. Copy GStreamer DLLs and plugins
+    # 5b. Copy GStreamer with QGC-expected directory layout
+    # QGC's _setGstEnvVars() expects: <exe>/../lib/gstreamer-1.0/ (plugins)
+    #                          and: <exe>/../libexec/gstreamer-1.0/ (scanner)
     if ($script:gstFound -and $script:gstPath) {
-        Write-Info "Deploying GStreamer runtime..."
-        $gstBinDir = Join-Path $script:gstPath "bin"
-        $gstLibDir = Join-Path $script:gstPath "lib"
-        $gstPluginDir = Join-Path $gstLibDir "gstreamer-1.0"
+        Write-Info "Deploying GStreamer runtime (QGC layout)..."
 
-        # Copy ALL DLLs from GStreamer bin (some plugins need them at runtime)
+        $gstBinDir  = Join-Path $script:gstPath "bin"
+        $gstLibDir  = Join-Path $script:gstPath "lib"
+        $gstPluginSrc = Join-Path $gstLibDir "gstreamer-1.0"
+
+        # Copy ALL runtime DLLs flat alongside the exe
         Copy-Item (Join-Path $gstBinDir "*.dll") $exeDir -Force -ErrorAction SilentlyContinue
         $dllCount = (Get-ChildItem $exeDir -Filter "*.dll").Count
 
-        # Copy GStreamer plugins
-        if (Test-Path $gstPluginDir) {
-            $pluginDest = Join-Path $exeDir "gstreamer-1.0"
-            if (-not (Test-Path $pluginDest)) {
-                New-Item -ItemType Directory -Path $pluginDest -Force | Out-Null
-            }
-            Copy-Item (Join-Path $gstPluginDir "*.dll") $pluginDest -Force -ErrorAction SilentlyContinue
+        # Copy GStreamer plugins to $BuildDir/lib/gstreamer-1.0/
+        # QGC's appDir is e.g. build/qt6-Windows/Release, so ../lib = build/qt6-Windows/lib
+        if (Test-Path $gstPluginSrc) {
+            $pluginDest = Join-Path $BuildDir "lib\gstreamer-1.0"
+            New-Item -ItemType Directory -Path $pluginDest -Force | Out-Null
+            Copy-Item (Join-Path $gstPluginSrc "*.dll") $pluginDest -Force -ErrorAction SilentlyContinue
             $pluginCount = (Get-ChildItem $pluginDest -Filter "*.dll").Count
-            Write-OK "GStreamer deployed ($dllCount DLLs, $pluginCount plugins)"
         } else {
-            Write-OK "GStreamer DLLs deployed ($dllCount DLLs)"
+            $pluginCount = 0
         }
+
+        # Copy plugin scanner to $BuildDir/libexec/gstreamer-1.0/
+        $scannerSrc = Join-Path $script:gstPath "libexec\gstreamer-1.0"
+        if (Test-Path $scannerSrc) {
+            $scannerDest = Join-Path $BuildDir "libexec\gstreamer-1.0"
+            New-Item -ItemType Directory -Path $scannerDest -Force | Out-Null
+            Copy-Item (Join-Path $scannerSrc "gst-plugin-scanner*") $scannerDest -Force -ErrorAction SilentlyContinue
+        }
+
+        # Copy GIO modules to $BuildDir/lib/gio/modules/
+        $gioSrc = Join-Path $gstLibDir "gio\modules"
+        if (Test-Path $gioSrc) {
+            $gioDest = Join-Path $BuildDir "lib\gio\modules"
+            New-Item -ItemType Directory -Path $gioDest -Force | Out-Null
+            Copy-Item (Join-Path $gioSrc "*.dll") $gioDest -Force -ErrorAction SilentlyContinue
+        }
+
+        Write-OK "GStreamer deployed ($dllCount DLLs, $pluginCount plugins)"
     } else {
         Write-Warn "GStreamer not found, video streaming will not work at runtime"
     }
 
-    # 5c. Set up GST_PLUGIN_PATH for runtime
-    $pluginRelDir = Join-Path $exeDir "gstreamer-1.0"
-    if (Test-Path $pluginRelDir) {
-        $env:GST_PLUGIN_PATH = $pluginRelDir
-        Write-Info "GST_PLUGIN_PATH configured"
+    # 5c. Clear stale GStreamer registry to force plugin re-scan on first run
+    $regDir = Join-Path $env:LOCALAPPDATA "gstreamer-1.0"
+    if (Test-Path $regDir) {
+        Remove-Item (Join-Path $regDir "registry.*.bin") -Force -ErrorAction SilentlyContinue
+        Write-Info "GStreamer registry cache cleared (plugin paths changed)"
     }
 
     Write-OK "Runtime deployment complete"

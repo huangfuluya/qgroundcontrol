@@ -179,16 +179,29 @@ git config --global https.proxy http://127.0.0.1:7897
 ```
 build/qt6-Windows/
 ├── Release/
-│   ├── QGroundControl.exe              ← 38.83 MB
+│   ├── QGroundControl.exe              ← 38.83 MB (appDir)
 │   ├── Qt6*.dll × 55+                  ← windeployqt 部署
-│   ├── gst*.dll, glib*.dll, ...        ← GStreamer 运行时
+│   ├── gst*.dll, glib*.dll, ...        ← GStreamer 运行时 DLL (bin/*.dll)
 │   ├── D3Dcompiler_47.dll, opengl32sw.dll
-│   ├── gstreamer-1.0/ (236 plugins)
 │   ├── platforms/qwindows.dll
 │   ├── qml/ (QML 模块)
 │   ├── translations/ (*.qm)
 │   └── imageformats/, sqldrivers/, ... (Qt 插件)
+├── lib/                                ← ../lib from appDir
+│   ├── gstreamer-1.0/ (236 plugins)    ← QGC 硬编码路径
+│   └── gio/modules/
+├── libexec/                            ← ../libexec from appDir
+│   └── gstreamer-1.0/ (gst-plugin-scanner)
 ├── Debug/
 ├── cpm_modules/                        ← CPM 包缓存
 └── build-Release.ninja
 ```
+
+**重要**: QGC 的 `_setGstEnvVars()` 在 Windows 上硬编码了 `../lib/gstreamer-1.0/` 和 `../libexec/` 路径（相对于 exe 所在目录）。因此 GStreamer 插件必须放在 `$BuildDir/lib/` 层级，不能放在 `$BuildDir/Release/` 内。
+
+### RTSP 视频流
+
+QGC 使用 `rtspsrc` 元素（来自 `gst-plugins-good`）处理 RTSP。确保以下 GStreamer 插件已部署：
+- `gstrtsp.dll`, `gstrtspclientsink.dll` (RTSP 协议)
+- `gstrtp.dll`, `gstrtpmanager.dll`, `gstrtpmanagerbad.dll`, `gstrtponvif.dll` (RTP 传输)
+- `gstsrtp.dll`, `gstrsrtp.dll` (SRTP 加密)
