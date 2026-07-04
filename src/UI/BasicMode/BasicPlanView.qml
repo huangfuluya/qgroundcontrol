@@ -9,8 +9,7 @@
 
 // 航点规划 - Waypoint Planning Tab
 // Simplified plan view with map and essential toolbar
-// Left toolbar: Add Waypoint, Delete Waypoint, Clear Mission, Start Mission, Pause Mission
-// Mission progress display at bottom
+// Left toolbar: Add Waypoint, Delete Waypoint, Clear Mission, Upload Waypoints, Download Waypoints
 
 import QtQuick
 import QtQuick.Controls
@@ -33,7 +32,6 @@ Item {
     property var    _activeVehicle:         QGroundControl.multiVehicleManager.activeVehicle
     property var    _missionController:     planMasterController.missionController
     property real   _margins:               ScreenTools.defaultFontPixelWidth
-    property bool   _missionRunning:        false
 
     readonly property var _defaultVehicleCoordinate:  QtPositioning.coordinate(37.803784, -122.462276)
 
@@ -47,13 +45,6 @@ Item {
             planMasterController.start()
             if (_missionController) {
                 _missionController.setCurrentPlanViewSeqNum(0, true)
-            }
-        }
-
-        function upload() {
-            if (_activeVehicle) {
-                planMasterController.sendToVehicle()
-                _missionRunning = true
             }
         }
     }
@@ -89,7 +80,6 @@ Item {
                 Layout.fillWidth:   true
                 text:               qsTr("添加航点")
                 font.pointSize:     ScreenTools.largeFontPointSize
-                enabled:            !_missionRunning
                 onClicked: {
                     addWaypointMode = true
                 }
@@ -100,7 +90,7 @@ Item {
                 Layout.fillWidth:   true
                 text:               qsTr("删除航点")
                 font.pointSize:     ScreenTools.largeFontPointSize
-                enabled:            !_missionRunning && _missionController.visualItems.count > 1
+                enabled:            _missionController.visualItems.count > 1
                 onClicked: {
                     var currentIndex = _missionController.currentPlanViewVIIndex
                     if (currentIndex >= 0 && currentIndex < _missionController.visualItems.count) {
@@ -114,7 +104,7 @@ Item {
                 Layout.fillWidth:   true
                 text:               qsTr("清空任务")
                 font.pointSize:     ScreenTools.largeFontPointSize
-                enabled:            !_missionRunning && _missionController.visualItems.count > 1
+                enabled:            _missionController.visualItems.count > 1
                 onClicked: {
                     confirmClearDialog.open()
                 }
@@ -122,30 +112,27 @@ Item {
 
             Item { Layout.preferredHeight: _margins }
 
-            // Start Mission
+            // Upload Waypoints
             QGCButton {
                 Layout.fillWidth:   true
-                text:               _missionRunning ? qsTr("执行中...") : qsTr("开始任务")
+                text:               qsTr("上传航点")
                 font.pointSize:     ScreenTools.largeFontPointSize
-                enabled:            !_missionRunning && _missionController.visualItems.count > 1 && _activeVehicle
+                enabled:            _missionController.visualItems.count > 1 && _activeVehicle
                 backgroundColor:    qgcPal.colorGreen
                 onClicked: {
-                    confirmStartDialog.open()
+                    confirmUploadDialog.open()
                 }
             }
 
-            // Pause Mission
+            // Download Waypoints
             QGCButton {
                 Layout.fillWidth:   true
-                text:               qsTr("暂停任务")
+                text:               qsTr("下载航点")
                 font.pointSize:     ScreenTools.largeFontPointSize
-                enabled:            _missionRunning
+                enabled:            _activeVehicle
                 backgroundColor:    "orange"
                 onClicked: {
-                    if (_activeVehicle) {
-                        _activeVehicle.pauseMission()
-                        _missionRunning = false
-                    }
+                    planMasterController.loadFromVehicle()
                 }
             }
 
@@ -159,7 +146,7 @@ Item {
         anchors.left:               leftToolbar.right
         anchors.right:              parent.right
         anchors.top:                parent.top
-        anchors.bottom:             missionProgressBar.visible ? missionProgressBar.top : parent.bottom
+        anchors.bottom:             parent.bottom
         anchors.margins:            _margins
         mapName:                    "BasicModeMissionEditor"
         allowGCSLocationCenter:     true
@@ -208,59 +195,15 @@ Item {
         }
     }
 
-    // Mission progress bar
-    Rectangle {
-        id:                 missionProgressBar
-        anchors.left:       leftToolbar.right
-        anchors.right:      parent.right
-        anchors.bottom:     parent.bottom
-        anchors.margins:    _margins
-        height:             ScreenTools.defaultFontPixelHeight * 4
-        color:              qgcPal.toolbarBackground
-        visible:            _missionRunning
-
-        RowLayout {
-            anchors.fill:       parent
-            anchors.margins:    _margins
-
-            QGCLabel {
-                text:           qsTr("任务进度:")
-                font.pointSize: ScreenTools.largeFontPointSize
-            }
-
-            Rectangle {
-                Layout.fillWidth:   true
-                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 1.5
-                radius:             3
-                color:              qgcPal.button
-
-                Rectangle {
-                    anchors.left:   parent.left
-                    anchors.top:    parent.top
-                    anchors.bottom: parent.bottom
-                    width:          parent.width * 0.3
-                    radius:         3
-                    color:          qgcPal.colorGreen
-                }
-            }
-
-            QGCLabel {
-                text:           qsTr("进行中")
-                font.pointSize: ScreenTools.defaultFontPointSize
-                color:          qgcPal.colorGreen
-            }
-        }
-    }
-
     //-- Confirmation Dialogs
     MessageDialog {
-        id:         confirmStartDialog
+        id:         confirmUploadDialog
         title:      qsTr("确认操作")
-        text:       qsTr("确定要开始执行任务吗？\n无人船将按照规划的航点顺序自动航行。")
+        text:       qsTr("确定要将当前航点上传到无人船吗？")
         buttons:    MessageDialog.Yes | MessageDialog.No
         onButtonClicked: function (button, role) {
             if (button === MessageDialog.Yes) {
-                planMasterController.upload()
+                planMasterController.sendToVehicle()
             }
         }
     }
@@ -268,10 +211,11 @@ Item {
     MessageDialog {
         id:         confirmClearDialog
         title:      qsTr("确认操作")
-        text:       qsTr("确定要清空所有航点吗？\n此操作不可撤销。")
+        text:       qsTr("确定要清空所有航点吗？\n此操作将同时清除飞控上的任务，且不可撤销。")
         buttons:    MessageDialog.Yes | MessageDialog.No
         onButtonClicked: function (button, role) {
             if (button === MessageDialog.Yes) {
+                planMasterController.removeAllFromVehicle()
                 _missionController.removeAll()
                 _missionController.insertSimpleMissionItem(mapCenter(), 0, true)
             }

@@ -10287,7 +10287,7 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/MissionManager/MissionSettingsItem.cc" line="287" />
       <source>Launch</source>
-      <translation>发射，起飞</translation>
+      <translation>启航点</translation>
     </message>
     <message>
       <location filename="../src/MissionManager/MissionSettingsItem.h" line="75" />

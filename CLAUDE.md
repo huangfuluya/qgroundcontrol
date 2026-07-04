@@ -284,6 +284,34 @@ src/VideoManager/VideoReceiver/GStreamer/gstqml6gl/qt6/qt6glitem.cc     (+3/-1)
 - `"CH1"/"CH2"` 动态切换 → 固定 `"摄像头切换"`
 - 按钮宽度 `×6` → `×14`（适配 5 字中文）
 
+### 航点规划按钮重构 (2026-07-04)
+
+**文件**: `src/UI/BasicMode/BasicPlanView.qml`
+
+将五个按钮中的"开始任务"和"暂停任务"重构为"上传航点"和"下载航点"：
+
+| 原按钮 | 新按钮 | 功能 | 启用条件 |
+|--------|--------|------|---------|
+| ~~开始任务~~（绿色） | **上传航点**（绿色） | 确认后调用 `planMasterController.sendToVehicle()` | 活跃车辆 + 航点数 > 1 |
+| ~~暂停任务~~（橙色） | **下载航点**（橙色） | 调用 `planMasterController.loadFromVehicle()`，下载后自动显示 | 活跃车辆 |
+
+**同步变更**：
+- 删除 `_missionRunning` 属性（不再追踪任务执行状态）
+- 删除底部 `missionProgressBar`（任务进度条）
+- 删除 `PlanMasterController.upload()` 自定义方法
+- "添加/删除/清空"按钮移除 `!_missionRunning` 启用限制
+- 新增 `confirmUploadDialog` 上传确认对话框
+
+### 清空任务修复 (2026-07-04)
+
+**问题**: 基本模式下点击"清空任务"按钮后，地图上的航点没有被清除。
+
+**根因**: `MissionController::removeAll()` 替换了 `_visualItems` 为新模型，但未发出 `visualItemsChanged()` 信号，导致 QML `Repeater` 仍持有旧模型引用。
+
+**修复文件**:
+- `src/MissionManager/MissionController.cc`: `removeAll()` 末尾添加 `emit visualItemsChanged()`
+- `src/UI/BasicMode/BasicPlanView.qml`: 确认回调中增加 `planMasterController.removeAllFromVehicle()`，同步清除飞控上的任务
+
 ### 日志下载界面修复 (2026-07-04)
 
 **文件**: `src/UI/BasicMode/BasicLogDownloadView.qml`

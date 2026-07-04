@@ -616,6 +616,7 @@ void MissionController::removeAll(void)
         setDirty(true);
         _resetMissionFlightStatus();
         _allItemsRemoved();
+        emit visualItemsChanged();
     }
 }
 
