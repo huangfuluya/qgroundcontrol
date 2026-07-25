@@ -146,6 +146,9 @@ docs/api/
 *.pyc
 __pycache__/
 
+# Auto-cloned ArduPilot parameter repository (used by firmware plugin tools)
+src/FirmwarePlugin/APM/ArduPilot-Parameter-Repository/
+
 # ------------------------------------------------------------------------------
 # Runtime & Logs
 # ------------------------------------------------------------------------------
