@@ -6,6 +6,14 @@
 
 #include <QtCore/QMutex>
 #include <gst/gst.h>
+// gst/gst.h (via gstmacros.h) defines `restrict` as `__restrict` for MSVC in C++ mode,
+// which breaks Qt 6.11's `__declspec(restrict)` in qarraydata.h (C2485).
+// Undefine it after GStreamer headers are fully processed — C++ code doesn't need the
+// `restrict` keyword, and GStreamer's C translation units define __STDC_VERSION__ so they
+// take a different code path in gstmacros.h.
+#ifdef _MSC_VER
+#undef restrict
+#endif
 
 QT_FORWARD_DECLARE_CLASS(QLoggingCategory)
 

@@ -2,6 +2,15 @@ if(NOT QGC_ENABLE_GST_VIDEOSTREAMING)
     return()
 endif()
 
+# gst/gst.h (via gstmacros.h) defines `restrict` as `__restrict` for MSVC in C++ mode,
+# which breaks Qt 6.11's `__declspec(restrict)` in qarraydata.h (C2485).
+# Predefine `restrict` as a no-op identity macro so gstmacros.h's `!defined(restrict)`
+# guard skips the redefinition, leaving `restrict` as an ordinary token that MSVC's
+# __declspec parser recognizes correctly.
+if(MSVC)
+    add_compile_definitions(restrict=restrict)
+endif()
+
 # Linux adds Allocators (gstreamer-allocators-1.0) for the DMABuf header probe in Orchestrator.cmake.
 set(_qgc_gst_components Core Base Video App Rtsp)
 if(LINUX)
