@@ -40,9 +40,9 @@ public:
     void stopStream() override {}
     bool stopTakePhoto() override { return false;}
     void resumeStream() override {}
-    void startTrackingRect(QRectF /*rec*/) override {}
-    void startTrackingPoint(QPointF /*point*/, double /*radius*/) override {}
-    void stopTracking() override {}
+    void startTrackingRect(QRectF rec) override;
+    void startTrackingPoint(QPointF point, double radius) override;
+    void stopTracking() override;
 
     int version() const override { return 0; }
     QString modelName() const override { return QStringLiteral("Simulated Camera"); }
@@ -56,9 +56,9 @@ public:
     bool hasModes() const override;
     bool hasZoom() const override { return false; }
     bool hasFocus() const override { return false; }
-    bool hasTracking() const override { return false; }
-    bool supportsTrackingPoint() const override { return false; }
-    bool supportsTrackingRect() const override { return false; }
+    bool hasTracking() const override { return true; }              // 强制开启：始终声明支持 tracking
+    bool supportsTrackingPoint() const override { return true; }    // 强制开启
+    bool supportsTrackingRect() const override { return true; }     // 强制开启
     bool hasVideoStream() const override;
     bool photosInVideoMode() const override { return true; }
     bool videoInPhotoMode() const override { return false; }
@@ -109,8 +109,8 @@ public:
     void setPhotoLapse(qreal /*interval*/) override {}
     void setPhotoLapseCount(int /*count*/) override {}
 
-    bool trackingEnabled() const override { return false; }
-    void setTrackingEnabled(bool /*set*/) override {}
+    bool trackingEnabled() const override { return _trackingEnabled; }
+    void setTrackingEnabled(bool set) override;
 
     bool trackingImageIsActive() const override { return false; }
     bool trackingImageIsPoint() const override { return false; }
@@ -139,4 +139,5 @@ private:
     void _setCameraMode(CameraMode mode);
 
     QElapsedTimer _videoRecordTimeElapsedTimer;
+    bool _trackingEnabled = false;  // 强制开启 camera tracking 后的用户开关状态
 };

@@ -155,8 +155,13 @@ VehicleCameraControl::VehicleCameraControl(const mavlink_camera_information_t *i
     });
 
     //-- Tracking capabilities
-    _hasTrackingRectCapability = _mavlinkCameraInfo.flags & CAMERA_CAP_FLAGS_HAS_TRACKING_RECTANGLE;
-    _hasTrackingPointCapability = _mavlinkCameraInfo.flags & CAMERA_CAP_FLAGS_HAS_TRACKING_POINT;
+    // 强制开启 camera tracking 功能：忽略相机能力标志，让 QGC 始终暴露点击/框选跟踪 UI
+    // 并实际发送 MAV_CMD_CAMERA_TRACK_POINT / TRACK_RECTANGLE 命令。
+    // 原始能力检测（恢复时取消下面两行注释、删除下方 true 赋值即可）：
+    //   _hasTrackingRectCapability = _mavlinkCameraInfo.flags & CAMERA_CAP_FLAGS_HAS_TRACKING_RECTANGLE;
+    //   _hasTrackingPointCapability = _mavlinkCameraInfo.flags & CAMERA_CAP_FLAGS_HAS_TRACKING_POINT;
+    _hasTrackingRectCapability = true;
+    _hasTrackingPointCapability = true;
 
     qCDebug(VehicleCameraControlLog) << "Camera Info:";
     qCDebug(VehicleCameraControlLog) << "   vendor:" << vendor();

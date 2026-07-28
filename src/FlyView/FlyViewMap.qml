@@ -587,6 +587,28 @@ FlightMap {
         }
     }
 
+    // Camera Tracking Geo Status visuals
+    // Displays the geographic location of a camera-tracked target.
+    // Automatically hides when no CAMERA_TRACKING_GEO_STATUS message is received
+    // within 2 seconds (handled by Vehicle via _cameraTrackingGeoStatusTimer).
+    MapQuickItem {
+        id:             cameraTrackingGeoItem
+        visible:        _activeVehicle &&
+                        _activeVehicle.cameraTrackingGeoActive &&
+                        _activeVehicle.cameraTrackingGeoCoordinate.isValid
+        z:              QGroundControl.zOrderMapItems
+        anchorPoint.x:  sourceItem.anchorPointX
+        anchorPoint.y:  sourceItem.anchorPointY
+        coordinate:     _activeVehicle ? _activeVehicle.cameraTrackingGeoCoordinate :
+                        QtPositioning.coordinate()
+
+        sourceItem: MissionItemIndexLabel {
+            checked:    true
+            index:      -1
+            label:      qsTr("Tracking", "Camera target tracking indicator")
+        }
+    }
+
     // Orbit telemetry visuals
     QGCMapCircleVisuals {
         id:             orbitTelemetryCircle

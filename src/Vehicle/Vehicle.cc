@@ -168,6 +168,8 @@ Vehicle::Vehicle(LinkInterface*             link,
 
     connect(&_orbitTelemetryTimer, &QTimer::timeout, this, &Vehicle::_orbitTelemetryTimeout);
 
+    connect(&_cameraTrackingGeoStatusTimer, &QTimer::timeout, this, &Vehicle::_cameraTrackingGeoStatusTimeout);
+
     // Start csv logger
     connect(&_csvLogTimer, &QTimer::timeout, this, &Vehicle::_writeCsvLine);
     _csvLogTimer.start(1000);
@@ -669,6 +671,9 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
     case MAVLINK_MSG_ID_ORBIT_EXECUTION_STATUS:
         _handleOrbitExecutionStatus(message);
         break;
+    case MAVLINK_MSG_ID_CAMERA_TRACKING_GEO_STATUS:
+        _handleCameraTrackingGeoStatus(message);
+        break;
     case MAVLINK_MSG_ID_PING:
         _handlePing(link, message);
         break;
@@ -806,6 +811,61 @@ void Vehicle::_orbitTelemetryTimeout()
 {
     _orbitActive = false;
     emit orbitActiveChanged(false);
+}
+
+void Vehicle::_handleCameraTrackingGeoStatus(const mavlink_message_t& message)
+{
+    mavlink_camera_tracking_geo_status_t trackingStatus;
+    mavlink_msg_camera_tracking_geo_status_decode(&message, &trackingStatus);
+
+    bool isActive = (trackingStatus.tracking_status & CAMERA_TRACKING_STATUS_FLAGS_ACTIVE) != 0;
+
+    if (!isActive) {
+        // Camera is not actively tracking (IDLE/ERROR) — clear marker
+        if (_cameraTrackingGeoActive) {
+            _cameraTrackingGeoActive = false;
+            emit cameraTrackingGeoActiveChanged(false);
+        }
+        _cameraTrackingGeoStatusTimer.stop();
+        return;
+    }
+
+    // Build coordinate from degE7 lat/lon and altitude in meters (AMSL, WGS84)
+    QGeoCoordinate newCoord(
+        static_cast<double>(trackingStatus.lat) / 1e7,
+        static_cast<double>(trackingStatus.lon) / 1e7,
+        static_cast<double>(trackingStatus.alt)
+    );
+
+    // Sanity check — invalid coordinates should not be rendered
+    if (!newCoord.isValid()) {
+        if (_cameraTrackingGeoActive) {
+            _cameraTrackingGeoActive = false;
+            emit cameraTrackingGeoActiveChanged(false);
+        }
+        _cameraTrackingGeoStatusTimer.stop();
+        return;
+    }
+
+    // Update coordinate (notify only on change to avoid spurious QML updates)
+    if (_cameraTrackingGeoCoordinate != newCoord) {
+        _cameraTrackingGeoCoordinate = newCoord;
+        emit cameraTrackingGeoCoordinateChanged(_cameraTrackingGeoCoordinate);
+    }
+
+    if (!_cameraTrackingGeoActive) {
+        _cameraTrackingGeoActive = true;
+        emit cameraTrackingGeoActiveChanged(true);
+    }
+
+    // Restart 2-second timeout — if no new message arrives, target is considered lost
+    _cameraTrackingGeoStatusTimer.start(_cameraTrackingGeoStatusTimeoutMsecs);
+}
+
+void Vehicle::_cameraTrackingGeoStatusTimeout()
+{
+    _cameraTrackingGeoActive = false;
+    emit cameraTrackingGeoActiveChanged(false);
 }
 
 void Vehicle::_handleCameraImageCaptured(const mavlink_message_t& message)

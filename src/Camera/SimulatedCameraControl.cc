@@ -252,3 +252,63 @@ void SimulatedCameraControl::setPhotoCaptureMode(MavlinkCameraControlInterface::
         emit photoCaptureModeChanged();
     }
 }
+
+//-- 强制开启 camera tracking：以下方法通过 _vehicle 发送真实 MAVLink 命令。
+//-- 目标组件使用飞机默认组件 ID（SimulatedCameraControl 没有真实相机组件 ID）。
+void SimulatedCameraControl::setTrackingEnabled(bool set)
+{
+    if (_trackingEnabled != set) {
+        _trackingEnabled = set;
+        emit trackingEnabledChanged();
+        if (!_trackingEnabled) {
+            stopTracking();
+        }
+    }
+}
+
+void SimulatedCameraControl::startTrackingRect(QRectF rec)
+{
+    qCDebug(SimulatedCameraControlLog) << "Start Tracking (Rectangle: ["
+                              << static_cast<float>(rec.x()) << ", "
+                              << static_cast<float>(rec.y()) << "] - ["
+                              << static_cast<float>(rec.x() + rec.width()) << ", "
+                              << static_cast<float>(rec.y() + rec.height()) << "]";
+
+    if (_vehicle) {
+        _vehicle->sendMavCommand(_vehicle->defaultComponentId(),
+                                 MAV_CMD_CAMERA_TRACK_RECTANGLE,
+                                 true,
+                                 static_cast<float>(rec.x()),
+                                 static_cast<float>(rec.y()),
+                                 static_cast<float>(rec.x() + rec.width()),
+                                 static_cast<float>(rec.y() + rec.height()));
+    }
+}
+
+void SimulatedCameraControl::startTrackingPoint(QPointF point, double radius)
+{
+    qCDebug(SimulatedCameraControlLog) << "Start Tracking (Point: ["
+                              << static_cast<float>(point.x()) << ", "
+                              << static_cast<float>(point.y()) << "], Radius:  "
+                              << static_cast<float>(radius);
+
+    if (_vehicle) {
+        _vehicle->sendMavCommand(_vehicle->defaultComponentId(),
+                                 MAV_CMD_CAMERA_TRACK_POINT,
+                                 true,
+                                 static_cast<float>(point.x()),
+                                 static_cast<float>(point.y()),
+                                 static_cast<float>(radius));
+    }
+}
+
+void SimulatedCameraControl::stopTracking()
+{
+    qCDebug(SimulatedCameraControlLog) << "Stop Tracking";
+
+    if (_vehicle) {
+        _vehicle->sendMavCommand(_vehicle->defaultComponentId(),
+                                 MAV_CMD_CAMERA_STOP_TRACKING,
+                                 true);
+    }
+}

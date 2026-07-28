@@ -217,6 +217,10 @@ public:
     Q_PROPERTY(bool             orbitActive     READ orbitActive        NOTIFY orbitActiveChanged)
     Q_PROPERTY(QGCMapCircle*    orbitMapCircle  READ orbitMapCircle     CONSTANT)
 
+    // The following properties relate to Camera Tracking Geo status
+    Q_PROPERTY(bool             cameraTrackingGeoActive     READ cameraTrackingGeoActive     NOTIFY cameraTrackingGeoActiveChanged)
+    Q_PROPERTY(QGeoCoordinate   cameraTrackingGeoCoordinate READ cameraTrackingGeoCoordinate NOTIFY cameraTrackingGeoCoordinateChanged)
+
     // Vehicle state used for guided control
     Q_PROPERTY(bool     flying                  READ flying                                         NOTIFY flyingChanged)       ///< Vehicle is flying
     Q_PROPERTY(bool     landing                 READ landing                                        NOTIFY landingChanged)      ///< Vehicle is in landing pattern (DO_LAND_START)
@@ -532,6 +536,8 @@ public:
     bool            autoDisarm                  ();
     bool            orbitActive                 () const { return _orbitActive; }
     QGCMapCircle*   orbitMapCircle              () { return _orbitMapCircle.get(); }
+    bool            cameraTrackingGeoActive     () const { return _cameraTrackingGeoActive; }
+    QGeoCoordinate  cameraTrackingGeoCoordinate () const { return _cameraTrackingGeoCoordinate; }
     bool            readyToFlyAvailable         () const{ return _readyToFlyAvailable; }
     bool            readyToFly                  () const{ return _readyToFly; }
     bool            allSensorsHealthy           () const{ return _allSensorsHealthy; }
@@ -781,6 +787,8 @@ signals:
     void sensorsHealthBitsChanged       (int sensorsHealthBits);
     void sensorsUnhealthyBitsChanged    (int sensorsUnhealthyBits);
     void orbitActiveChanged             (bool orbitActive);
+    void cameraTrackingGeoActiveChanged       (bool cameraTrackingGeoActive);
+    void cameraTrackingGeoCoordinateChanged   (QGeoCoordinate cameraTrackingGeoCoordinate);
     void readyToFlyAvailableChanged     (bool readyToFlyAvailable);
     void readyToFlyChanged              (bool readyToFy);
     void allSensorsHealthyChanged       (bool allSensorsHealthy);
@@ -855,6 +863,7 @@ private slots:
     void _sendQGCTimeToVehicle              ();
     void _mavlinkMessageStatus              (int uasId, uint64_t totalSent, uint64_t totalReceived, uint64_t totalLoss, float lossPercent);
     void _orbitTelemetryTimeout             ();
+    void _cameraTrackingGeoStatusTimeout    ();
     void _updateFlightTime                  ();
     void _gotProgressUpdate                 (float progressValue);
 
@@ -874,6 +883,7 @@ private:
     void _handleHighLatency             (mavlink_message_t& message);
     void _handleHighLatency2            (mavlink_message_t& message);
     void _handleOrbitExecutionStatus    (const mavlink_message_t& message);
+    void _handleCameraTrackingGeoStatus (const mavlink_message_t& message);
     void _handleGimbalOrientation       (const mavlink_message_t& message);
     void _handleObstacleDistance        (const mavlink_message_t& message);
     void _handleFenceStatus             (const mavlink_message_t& message);
@@ -1047,6 +1057,12 @@ private:
     std::unique_ptr<QGCMapCircle> _orbitMapCircle;
     QTimer          _orbitTelemetryTimer;
     static const int _orbitTelemetryTimeoutMsecs = 3000; // No telemetry for this amount and orbit will go inactive
+
+    // Camera Tracking Geo status values
+    bool            _cameraTrackingGeoActive         = false;
+    QGeoCoordinate  _cameraTrackingGeoCoordinate;
+    QTimer          _cameraTrackingGeoStatusTimer;
+    static const int _cameraTrackingGeoStatusTimeoutMsecs = 2000; // 2 seconds without telemetry and the target is considered lost
 
     std::unique_ptr<MAVLinkStreamConfig> _mavlinkStreamConfig;
 
