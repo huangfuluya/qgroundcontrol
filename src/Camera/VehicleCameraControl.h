@@ -77,7 +77,7 @@ public:
     bool        capturesVideo       () const override;
     bool        capturesPhotos      () const override;
     bool        hasModes            () const override { return _mavlinkCameraInfo.flags & CAMERA_CAP_FLAGS_HAS_MODES; }
-    bool        hasZoom             () const override { return _mavlinkCameraInfo.flags & CAMERA_CAP_FLAGS_HAS_BASIC_ZOOM; }
+    bool        hasZoom             () const override { return true; } // Force-enabled: camera supports zoom via MAVLink but doesn't report CAMERA_CAP_FLAGS_HAS_BASIC_ZOOM
     bool        hasFocus            () const override { return _mavlinkCameraInfo.flags & CAMERA_CAP_FLAGS_HAS_BASIC_FOCUS; }
     bool        hasTracking         () const override { return _hasTrackingRectCapability || _hasTrackingPointCapability; }
     bool        supportsTrackingPoint() const override { return _hasTrackingPointCapability; }
