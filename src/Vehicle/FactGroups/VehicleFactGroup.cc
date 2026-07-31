@@ -71,6 +71,9 @@ void VehicleFactGroup::handleMessage(Vehicle *vehicle, const mavlink_message_t &
     case MAVLINK_MSG_ID_RAW_IMU:
         _handleRawImuTemp(message);
         break;
+    case MAVLINK_MSG_ID_DISTANCE_SENSOR:
+        _handleDistanceSensor(message);
+        break;
 #ifndef QGC_NO_ARDUPILOT_DIALECT
     case MAVLINK_MSG_ID_RANGEFINDER:
         _handleRangefinder(message);
@@ -207,6 +210,16 @@ void VehicleFactGroup::_handleRawImuTemp(const mavlink_message_t &message)
     mavlink_msg_raw_imu_decode(&message, &imuRaw);
 
     imuTemp()->setRawValue((imuRaw.temperature == 0) ? 0 : (imuRaw.temperature * 0.01));
+
+    _setTelemetryAvailable(true);
+}
+
+void VehicleFactGroup::_handleDistanceSensor(const mavlink_message_t &message)
+{
+    mavlink_distance_sensor_t distanceSensor{};
+    mavlink_msg_distance_sensor_decode(&message, &distanceSensor);
+
+    rangeFinderDist()->setRawValue(distanceSensor.current_distance / 100.0);
 
     _setTelemetryAvailable(true);
 }

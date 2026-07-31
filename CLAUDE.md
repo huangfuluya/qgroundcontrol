@@ -346,6 +346,30 @@ src/VideoManager/VideoReceiver/GStreamer/gstqml6gl/qt6/qt6glitem.cc     (+16/-2)
 - 删除 `confirmStopDialog` MessageDialog 确认对话框
 - 将"锁定/解锁"按钮（`btnArm`）的锚点从 `btnStop.bottom` 改为 `btnRTL.bottom`，保持布局连续
 
+### 水深数据源切换：RANGEFINDER → DISTANCE_SENSOR (2026-07-31)
+
+**背景**：简单模式左侧状态栏"水深"显示的数据来源于 `MAVLINK_MSG_ID_RANGEFINDER`（#173，ArduPilot 专有方言），需要改为解析标准 mavlink 消息 `MAVLINK_MSG_ID_DISTANCE_SENSOR`（#132）。
+
+**数据流**：
+```
+飞控 → DISTANCE_SENSOR (#132) → current_distance (cm) ÷ 100 → rangeFinderDist Fact (m) → QML 显示 "水深: X.Xm"
+```
+
+**修改文件**：
+
+| 文件 | 改动 |
+|------|------|
+| `src/Vehicle/FactGroups/VehicleFactGroup.h` 第 87 行 | 新增 `_handleDistanceSensor` 方法声明 |
+| `src/Vehicle/FactGroups/VehicleFactGroup.cc` 第 74-76 行 | 新增 `MAVLINK_MSG_ID_DISTANCE_SENSOR` 路由 |
+| `src/Vehicle/FactGroups/VehicleFactGroup.cc` 第 217-225 行 | 新增处理函数：解码 → cm→m 转换 → 写入 `rangeFinderDist` |
+
+**关键设计决策**：
+- 复用同一个 Fact（`_rangeFinderDistFact`），**QML 层零改动**
+- `current_distance` 单位厘米，需 `/100.0` 转为米
+- DISTANCE_SENSOR 在 RANGEFINDER 之前路由，但两者互不冲突（不同 msgid）
+- 保留 RANGEFINDER 处理作为回退（`#ifndef QGC_NO_ARDUPILOT_DIALECT` 保护）
+- 不判断传感器 `orientation`（只有单路水深传感器）
+
 ### 一键返航按钮行为分析 (2026-07-04)
 
 **文件**: `src/UI/BasicMode/BasicFlyView.qml` + C++ 固件插件
