@@ -73,7 +73,11 @@ void GstVideoReceiver::start(uint32_t timeout)
     _timeout = timeout;
     // Use a reasonable lower jitter buffer even in low-latency mode.
     // -1 (no jitter buffer) causes visible stutter on RTSP streams.
-    _buffer = lowLatency() ? 50 : 200;
+    // 50ms was too aggressive for real-world wireless networks -- a single
+    // late packet could exhaust the jitter buffer and cause a frame drop.
+    // 80ms provides enough margin for WiFi/cellular jitter while keeping
+    // glass-to-glass latency under 150ms.
+    _buffer = lowLatency() ? 80 : 200;
 
     qCDebug(GstVideoReceiverLog) << "Starting" << _uri << ", lowLatency" << lowLatency() << ", timeout" << _timeout << ", buffer" << _buffer;
 
@@ -112,15 +116,18 @@ void GstVideoReceiver::start(uint32_t timeout)
         // Limit queue size to prevent unbounded latency build-up.
         // Enough buffering for smooth decode but not so much that latency
         // grows over time.
-        // Use leaky=2 (downstream) with generous limits: downstream leak
-        // drops the oldest frames first, so keyframes are only dropped if
-        // the queue is completely full for the entire GOP duration. With
-        // 60 buffers (~2s at 30fps) this covers most GOP sizes.
+        // Use leaky=1 (upstream) instead of leaky=2 (downstream):
+        // - leaky=2 drops the OLDEST buffers first, which can include
+        //   keyframes, causing decoder resync stalls and visible stutter.
+        // - leaky=1 drops NEWEST buffers (upstream side), preserving the
+        //   frame sequence so the decoder never sees gaps.
+        // Queue capacity expanded to 90 buffers (~3s at 30fps) with 64MB
+        // byte limit to handle high-res streams without overflow.
         g_object_set(decoderQueue,
-                     "max-size-buffers", 60,
-                     "max-size-time",   static_cast<guint64>(2000 * GST_MSECOND),
-                     "max-size-bytes",  32 * 1024 * 1024,
-                     "leaky",           2, // leak downstream (drop old buffers)
+                     "max-size-buffers", 90,
+                     "max-size-time",   static_cast<guint64>(3000 * GST_MSECOND),
+                     "max-size-bytes",  64 * 1024 * 1024,
+                     "leaky",           1, // leak upstream (drop new, keep frame sequence)
                      nullptr);
 
         _decoderValve = gst_element_factory_make("valve", nullptr);
@@ -685,12 +692,31 @@ GstElement *GstVideoReceiver::_makeSource(const QString &input)
                 break;
             }
 
+            // rtspsrc 'latency' controls the internal jitter buffer size (ms).
+            // GStreamer default: 2000ms. VLC uses ~1000ms for network streams.
+            // The previous code re-used _buffer (80ms low-latency) here, which
+            // is catastrophic: the jitter buffer could hold at most 80ms of
+            // data before dropping packets (drop-on-latency=TRUE). On WiFi/
+            // cellular, a single packet retransmission (~10-50ms) plus normal
+            // jitter easily exceeds 80ms, causing massive frame drops.
+            //
+            // Use a dedicated RTSP networtk buffer, much larger than the
+            // pipeline buffer. We want smooth video with a few hundred ms
+            // of glass-to-glass latency, not <80ms with constant stutter.
+            const guint rtspBufferMs = lowLatency() ? 300u : 500u;
+            // Force TCP interleaved transport for RTSP data.
+            // GstRTSPLowerTrans: UDP=0x01, UDP-MCAST=0x02, TCP=0x04, TLS=0x10.
+            // The default (auto) tries UDP first, which suffers from packet
+            // loss on wireless links (WiFi/cellular). TCP interleaved sends
+            // video data over the RTSP TCP connection, providing reliable
+            // in-order delivery at the cost of slightly higher latency.
+            // For drone video, reliability >> minimal latency.
             g_object_set(source,
                          "location", input.toUtf8().constData(),
-                         "latency", _buffer,
-                         "drop-on-latency", TRUE,
+                         "latency", rtspBufferMs,
+                         "drop-on-latency", FALSE,
                          "do-retransmission", TRUE,
-                         "udp-reconnect", TRUE,
+                         "protocols", 0x04, // TCP only
                          "timeout", kRtspUdpReconnectTimeoutUs,
                          nullptr);
         } else if (isTcpMPEGTS) {
@@ -845,11 +871,16 @@ GstElement *GstVideoReceiver::_makeDecoder(GstCaps *caps, GstElement *videoSink)
         return nullptr;
     }
 
-    // Prefer low-latency decoding: skip B-frames, prefer speed over quality.
+    // Allow full decoding including B-frames for smooth video playback.
+    // decodebin3.low-latency=TRUE skips B-frames, which effectively reduces
+    // the frame rate from 30fps to ~15-20fps (I+P frames only), causing
+    // visible judder. With a properly sized network jitter buffer (300-500ms),
+    // the additional ~33-66ms latency from B-frame decoding is negligible
+    // and the visual improvement from full 30fps is dramatic.
     // The low-latency property is available since GStreamer 1.24;
     // it will be silently ignored on older versions.
     g_object_set(decoder,
-                 "low-latency", TRUE,
+                 "low-latency", FALSE,
                  nullptr);
 
     return decoder;
@@ -1054,9 +1085,16 @@ bool GstVideoReceiver::_addVideoSink(GstPad *pad)
         return false;
     }
 
+    // Disable clock synchronization on the video sink.
+    // When sync=TRUE, the sink waits for the pipeline clock to reach each
+    // frame's timestamp before rendering. With tight pipeline latency this
+    // causes frames to arrive "late" and get dropped by the sink. For
+    // real-time drone video we want frames rendered immediately on arrival.
+    // The jitter buffer (configured on rtspsrc) provides smoothing at the
+    // source level, so we don't need sink-level timestamp sync.
     g_object_set(_videoSink,
                  "widget", _widget,
-                 "sync", (_buffer >= 0),
+                 "sync", FALSE,
                  NULL);
 
     // Set a processing-deadline on the actual video sink (qml6glsink inside
@@ -1071,11 +1109,27 @@ bool GstVideoReceiver::_addVideoSink(GstPad *pad)
                 qmlsink = gst_bin_get_by_name(GST_BIN(glsinkbin), "qml6glsink");
             }
             if (qmlsink && GST_IS_BASE_SINK(qmlsink)) {
-                // 33ms deadline = ~30fps maximum. Frames that cannot be decoded
-                // and rendered within this window may be dropped by the decoder.
+                // processing-deadline tells the decoder when to skip frames to
+                // keep the pipeline from falling behind. Using a deadline that
+                // matches the expected frame rate but with 33-50% headroom:
+                // - Normal mode: target ~15fps (66ms) -- smooth playback
+                // - Low-latency mode: target ~25fps (40ms) -- responsive but not aggressive
+                // The previous 33ms (~30fps) caused excessive frame drops when
+                // decoding high-res streams or running on non-GPU-accelerated
+                // hardware, resulting in visible stutter.
+                const GstClockTime deadline = (_buffer >= 200)
+                    ? static_cast<GstClockTime>(GST_SECOND / 15)   // 66ms, normal mode
+                    : static_cast<GstClockTime>(GST_SECOND / 25);  // 40ms, low-latency
                 gst_base_sink_set_processing_deadline(
-                    GST_BASE_SINK_CAST(qmlsink),
-                    static_cast<GstClockTime>(GST_SECOND / 30));
+                    GST_BASE_SINK_CAST(qmlsink), deadline);
+
+                // Enable QoS: when the sink detects it's falling behind
+                // (frames arriving later than the deadline), it sends QoS
+                // events upstream. This allows decoders to skip non-reference
+                // frames (B-frames, then P-frames) instead of accumulating
+                // an ever-growing backlog that causes latency and stutter.
+                gst_base_sink_set_qos_enabled(
+                    GST_BASE_SINK_CAST(qmlsink), TRUE);
             }
             if (qmlsink) gst_object_unref(qmlsink);
             gst_object_unref(glsinkbin);

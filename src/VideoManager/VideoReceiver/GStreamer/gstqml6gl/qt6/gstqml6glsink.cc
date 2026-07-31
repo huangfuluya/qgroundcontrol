@@ -538,9 +538,11 @@ gst_qml6_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       goto config_failed;
   }
 
-  /* we need at least 4 buffers to avoid stalling the pipeline while
-   * Qt scene graph holds on to previous frames */
-  gst_query_add_allocation_pool (query, pool, size, 4, 0);
+  /* we need at least 6 buffers to avoid stalling the pipeline while
+   * Qt scene graph holds on to previous frames. The scene graph may
+   * retain up to 2-3 old frames during threaded rendering, and we need
+   * additional headroom for the decoder and sink to work concurrently. */
+  gst_query_add_allocation_pool (query, pool, size, 6, 0);
   if (pool)
     gst_object_unref (pool);
 

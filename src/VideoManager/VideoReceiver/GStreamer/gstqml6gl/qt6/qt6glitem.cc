@@ -99,6 +99,14 @@ struct _Qt6GLVideoItemPrivate
   GQueue potentially_unbound_buffers;
 
   GstQSG6OpenGLNode *m_node;
+
+  /* coalesce update() calls: when the GStreamer thread is producing frames
+   * faster than the main thread (Qt scene graph) can render them, multiple
+   * QMetaObject::invokeMethod("update") calls pile up in the event queue,
+   * causing redundant paint cycles that waste CPU and delay processing of
+   * other UI events (telemetry, maps). This flag ensures only a single
+   * pending update is queued at any time. */
+  gboolean update_pending;
 };
 
 Qt6GLVideoItem::Qt6GLVideoItem()
@@ -295,6 +303,10 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
   g_mutex_lock (&this->priv->lock);
 
   GST_TRACE ("%p updatePaintNode", this);
+
+  // A paint cycle is now executing; clear the flag so the next incoming
+  // buffer can schedule another update.
+  this->priv->update_pending = FALSE;
 
   if (gst_gl_context_get_current() == NULL)
     gst_gl_context_activate (this->priv->other_context, TRUE);
@@ -517,7 +529,16 @@ Qt6GLVideoItemInterface::setBuffer (GstBuffer * buffer)
 
   gst_buffer_replace (&qt_item->priv->buffer, buffer);
 
-  QMetaObject::invokeMethod(qt_item, "update", Qt::QueuedConnection);
+  // Coalesce update() calls: if a paint cycle has not yet been scheduled,
+  // queue one. If one is already pending, skip this call — the pending
+  // paint will pick up the latest buffer we just swapped in. This prevents
+  // the Qt event loop from being flooded with redundant update() calls
+  // when the GStreamer pipeline is producing frames faster than the scene
+  // graph can render them (e.g., high-fps sources on slower GPUs).
+  if (!qt_item->priv->update_pending) {
+    qt_item->priv->update_pending = TRUE;
+    QMetaObject::invokeMethod(qt_item, "update", Qt::QueuedConnection);
+  }
 
   g_mutex_unlock (&qt_item->priv->lock);
 }
