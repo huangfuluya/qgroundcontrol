@@ -384,4 +384,62 @@ src/VideoManager/VideoReceiver/GStreamer/gstqml6gl/qt6/qt6glitem.cc     (+16/-2)
 | ④ 模式切换+验证 | `FirmwarePlugin.cc:263` | `_setFlightModeAndValidate` 发送 MAVLink `SET_MODE` 命令，最多重试3次，每次等待1.3秒 |
 | ⑤ 飞控执行 | 飞控固件 | 自主导航返回 home 点 |
 
+---
+
+## 遥测 MAVLink CSV 日志修复 (2026-08-01)
+
+**背景**: 基础模式"日志下载"页右侧遥测日志面板实时记录 MAVLink 消息到 CSV。需求：记录所有收到的 MAVLink 消息，且所有字段可解码、十进制记录。
+
+### 问题 1：部分消息被漏记
+
+原实现挂在 `Vehicle::mavlinkMessageReceived` 信号上，该信号在 `Vehicle::_mavlinkMessageReceived` **末尾**才 emit，中途提前 `return` 的消息不会被记录：
+
+| 提前 return 位置 | 漏记的消息 |
+|------------------|-----------|
+| sysid 过滤 (`sysid != _id && sysid != 0`) | 其他系统 ID 消息（RADIO_STATUS 除外，属有意过滤） |
+| `TerrainProtocolHandler::mavlinkMessageReceived` return false | **TERRAIN_REQUEST (133)、TERRAIN_REPORT (136)** |
+| `_firmwarePlugin->adjustIncomingMavlinkMessage` return false | 被固件插件吞掉的消息（当前版本未触发，存在风险） |
+| `QGCCorePlugin::mavlinkMessage` return false | 被核心插件吞掉的消息（默认 return true） |
+
+**修复**: 移除构造函数中 `connect(this, &Vehicle::mavlinkMessageReceived, ...)`，改为在 `_mavlinkMessageReceived` 内 sysid 过滤之后、其他所有过滤之前直接调用 `_logMavlinkMessage(message)`。
+
+### 问题 2：非硬编码消息只记 ID，payload 全丢
+
+原实现仅硬编码解码 8 种消息（HEARTBEAT/SYS_STATUS/GPS_RAW_INT/SCALED_PRESSURE/ATTITUDE/GLOBAL_POSITION_INT/VFR_HUD/BATTERY_STATUS），其余消息走 default 只记 `ID_xxx`。
+
+**修复**: 改用 MAVLink 方言消息信息表 `mavlink_get_message_info()` 通用解码（`MAVLINK_USE_MESSAGE_INFO` 已在 `src/MAVLink/MAVLinkLib.h` 定义；编译的 `all` 方言包含 ardupilotmega/common/development 全部消息，二分查找）：
+
+- 所有字段按 `字段名=值` **十进制**输出（float 9 位有效数字、double 17 位，保证精度不丢）
+- 数组字段按下标展开：`voltages[0]=12600;voltages[1]=12601;...`
+- char 数组按引号字符串记录：`text="ArduPilot Ready"`
+- 方言表之外的未知消息按字节**十进制**记录：`byte0=12;byte1=34;...`
+- 新增文件级静态辅助函数 `_mavlinkWireLength()` / `_mavlinkFieldValueToString()`（memcpy 按线序偏移安全解码，避免未对齐访问 UB）
+
+### CSV 格式变化
+
+```
+旧: Timestamp,MsgID,MsgName,SysID,CompID,Field1,Field2,...,Field8   (固定8列，字段数>8的消息放不下)
+新: Timestamp,MsgID,MsgName,SysID,CompID,Data                       (Data 列为 ; 分隔的 name=value 对)
+```
+
+示例行：
+```
+2026-08-01 16:40:17.123,30,ATTITUDE,1,1,time_boot_ms=12345;roll=-0.0123;pitch=0.0345;yaw=1.5708;...
+```
+
+**注意**: Excel 打开后 Data 列在单个单元格内，需"数据→分列→分号分隔"拆分，或用 pandas 按 `;` 拆分。
+
+### 修改文件
+
+| 文件 | 改动 |
+|------|------|
+| `src/Vehicle/Vehicle.cc` | 记录点前移至 `_mavlinkMessageReceived` 入口；`_logMavlinkMessage` 重写为查表通用解码 |
+| `src/UI/BasicMode/BasicLogDownloadView.qml` | 右侧面板说明文字更新为新 CSV 格式 |
+
+### 架构说明
+
+- Vehicle 创建之前（连接后第一个心跳到达前）的消息无法记录，属 per-vehicle 日志的固有限制
+- 每条消息实时 `flush()` 写盘，~100-200Hz 遥测下主线程有 IO 压力，目前可接受；如需优化可改缓冲批量写入
+- 左侧板载日志下载（LogDownloadController）与本次改动无关
+
 

@@ -69,6 +69,8 @@
 
 #include <QtCore/QDateTime>
 
+#include <cstring>
+
 QGC_LOGGING_CATEGORY(VehicleLog, "VehicleLog")
 
 #define UPDATE_TIMER 50
@@ -188,8 +190,9 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(&_csvLogTimer, &QTimer::timeout, this, &Vehicle::_writeCsvLine);
     _csvLogTimer.start(1000);
 
-    // Start raw MAVLink message CSV logger
-    connect(this, &Vehicle::mavlinkMessageReceived, this, &Vehicle::_logMavlinkMessage);
+    // Raw MAVLink message CSV logging is done directly in _mavlinkMessageReceived so that
+    // every incoming message is logged, including ones consumed by early-return filters
+    // (terrain protocol, firmware plugin adjustments, core plugin, etc.)
 
     // Start timer to limit altitude above terrain queries
     _altitudeAboveTerrQueryTimer.restart();
@@ -472,6 +475,11 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
             return;
         }
     }
+
+    // Log every incoming MAVLink message to the CSV file before any further processing.
+    // This must happen before the early returns below (terrain protocol handler, firmware
+    // plugin adjustment, core plugin filter) so no received message is ever missed.
+    _logMavlinkMessage(message);
 
     // We give the link manager first whack since it it reponsible for adding new links
     _vehicleLinkManager->mavlinkMessageReceived(link, message);
@@ -3663,6 +3671,92 @@ void Vehicle::_writeCsvLine()
     stream << allFactValues.join(",") << "\n";
 }
 
+// Wire length in bytes for each MAVLink field type
+static unsigned _mavlinkWireLength(mavlink_message_type_t type)
+{
+    switch (type) {
+    case MAVLINK_TYPE_CHAR:
+    case MAVLINK_TYPE_UINT8_T:
+    case MAVLINK_TYPE_INT8_T:
+        return 1;
+    case MAVLINK_TYPE_UINT16_T:
+    case MAVLINK_TYPE_INT16_T:
+        return 2;
+    case MAVLINK_TYPE_UINT32_T:
+    case MAVLINK_TYPE_INT32_T:
+    case MAVLINK_TYPE_FLOAT:
+        return 4;
+    case MAVLINK_TYPE_UINT64_T:
+    case MAVLINK_TYPE_INT64_T:
+    case MAVLINK_TYPE_DOUBLE:
+        return 8;
+    }
+    return 0;
+}
+
+// Decode a single field value from the wire payload. All numeric values are returned in decimal.
+static QString _mavlinkFieldValueToString(mavlink_message_type_t type, const char* rawValue)
+{
+    switch (type) {
+    case MAVLINK_TYPE_CHAR: {
+        char value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString(QChar::fromLatin1(value));
+    }
+    case MAVLINK_TYPE_UINT8_T: {
+        uint8_t value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value);
+    }
+    case MAVLINK_TYPE_INT8_T: {
+        int8_t value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value);
+    }
+    case MAVLINK_TYPE_UINT16_T: {
+        uint16_t value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value);
+    }
+    case MAVLINK_TYPE_INT16_T: {
+        int16_t value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value);
+    }
+    case MAVLINK_TYPE_UINT32_T: {
+        uint32_t value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value);
+    }
+    case MAVLINK_TYPE_INT32_T: {
+        int32_t value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value);
+    }
+    case MAVLINK_TYPE_UINT64_T: {
+        uint64_t value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value);
+    }
+    case MAVLINK_TYPE_INT64_T: {
+        int64_t value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value);
+    }
+    case MAVLINK_TYPE_FLOAT: {
+        float value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value, 'g', 9);
+    }
+    case MAVLINK_TYPE_DOUBLE: {
+        double value;
+        std::memcpy(&value, rawValue, sizeof(value));
+        return QString::number(value, 'g', 17);
+    }
+    }
+    return QString();
+}
+
 void Vehicle::_logMavlinkMessage(const mavlink_message_t& message)
 {
     if (!_mavlinkCsvLogFile.isOpen()) {
@@ -3677,117 +3771,65 @@ void Vehicle::_logMavlinkMessage(const mavlink_message_t& message)
         }
 
         QTextStream headerStream(&_mavlinkCsvLogFile);
-        headerStream << "Timestamp,MsgID,MsgName,SysID,CompID,"
-                     << "Field1,Field2,Field3,Field4,Field5,Field6,Field7,Field8\n";
+        headerStream << "Timestamp,MsgID,MsgName,SysID,CompID,Data\n";
         _mavlinkCsvMsgCount = 0;
         emit mavlinkCsvLogActiveChanged();
         emit mavlinkCsvLogFileNameChanged();
     }
 
     QTextStream stream(&_mavlinkCsvLogFile);
-    QString timestamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz"));
+    const QString timestamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz"));
+
     QString msgName;
-    QStringList fields;
+    QStringList dataFields;
 
-    switch (message.msgid) {
-    case MAVLINK_MSG_ID_HEARTBEAT: {
-        msgName = "HEARTBEAT";
-        mavlink_heartbeat_t hb;
-        mavlink_msg_heartbeat_decode(&message, &hb);
-        fields << QString::number(hb.type)
-               << QString::number(hb.autopilot)
-               << QString::number(hb.base_mode)
-               << QString::number(hb.custom_mode);
-        break;
+    // Generically decode every message known to the compiled MAVLink dialect (all/common/
+    // ardupilotmega/development) using the message info table. All field values are written
+    // in decimal as name=value pairs separated by semicolons.
+    const mavlink_message_info_t* const msgInfo = mavlink_get_message_info(&message);
+    if (msgInfo) {
+        msgName = QString::fromLatin1(msgInfo->name);
+        const char* const payload = _MAV_PAYLOAD(&message);
+        for (unsigned fieldIndex = 0; fieldIndex < msgInfo->num_fields; fieldIndex++) {
+            const mavlink_field_info_t& fieldInfo = msgInfo->fields[fieldIndex];
+            if (fieldInfo.type == MAVLINK_TYPE_CHAR && fieldInfo.array_length > 1) {
+                // Character arrays are logged as text strings
+                QString text = QString::fromLatin1(payload + fieldInfo.wire_offset, fieldInfo.array_length);
+                const int nullPos = text.indexOf(QLatin1Char('\0'));
+                if (nullPos >= 0) {
+                    text.truncate(nullPos);
+                }
+                text.replace(QLatin1Char('"'), QLatin1Char('\''));
+                text.replace(QLatin1Char('\r'), QLatin1Char(' '));
+                text.replace(QLatin1Char('\n'), QLatin1Char(' '));
+                dataFields << QStringLiteral("%1=\"%2\"").arg(QString::fromLatin1(fieldInfo.name), text);
+                continue;
+            }
+            const unsigned elementCount = qMax(1u, fieldInfo.array_length);
+            const unsigned wireLength = _mavlinkWireLength(fieldInfo.type);
+            for (unsigned elementIndex = 0; elementIndex < elementCount; elementIndex++) {
+                const char* const rawValue = payload + fieldInfo.wire_offset + elementIndex * wireLength;
+                const QString fieldName = elementCount > 1
+                        ? QStringLiteral("%1[%2]").arg(QString::fromLatin1(fieldInfo.name)).arg(elementIndex)
+                        : QString::fromLatin1(fieldInfo.name);
+                dataFields << QStringLiteral("%1=%2").arg(fieldName, _mavlinkFieldValueToString(fieldInfo.type, rawValue));
+            }
+        }
+    } else {
+        // Message not present in the dialect table: log raw payload bytes in decimal
+        msgName = QStringLiteral("ID_%1").arg(message.msgid);
+        const uint8_t* const payload = reinterpret_cast<const uint8_t*>(message.payload64);
+        for (unsigned byteIndex = 0; byteIndex < message.len; byteIndex++) {
+            dataFields << QStringLiteral("byte%1=%2").arg(byteIndex).arg(payload[byteIndex]);
+        }
     }
-    case MAVLINK_MSG_ID_SYS_STATUS: {
-        msgName = "SYS_STATUS";
-        mavlink_sys_status_t sys;
-        mavlink_msg_sys_status_decode(&message, &sys);
-        fields << QString::number(sys.voltage_battery)
-               << QString::number(sys.current_battery)
-               << QString::number(sys.battery_remaining)
-               << QString::number(sys.load);
-        break;
-    }
-    case MAVLINK_MSG_ID_GPS_RAW_INT: {
-        msgName = "GPS_RAW_INT";
-        mavlink_gps_raw_int_t gps;
-        mavlink_msg_gps_raw_int_decode(&message, &gps);
-        fields << QString::number(gps.fix_type)
-               << QString::number(gps.lat)
-               << QString::number(gps.lon)
-               << QString::number(gps.alt)
-               << QString::number(gps.satellites_visible);
-        break;
-    }
-    case MAVLINK_MSG_ID_SCALED_PRESSURE: {
-        msgName = "SCALED_PRESSURE";
-        mavlink_scaled_pressure_t sp;
-        mavlink_msg_scaled_pressure_decode(&message, &sp);
-        fields << QString::number(sp.press_abs, 'f', 2)
-               << QString::number(sp.temperature / 100.0, 'f', 1);
-        break;
-    }
-    case MAVLINK_MSG_ID_ATTITUDE: {
-        msgName = "ATTITUDE";
-        mavlink_attitude_t att;
-        mavlink_msg_attitude_decode(&message, &att);
-        fields << QString::number(att.roll, 'f', 4)
-               << QString::number(att.pitch, 'f', 4)
-               << QString::number(att.yaw, 'f', 4);
-        break;
-    }
-    case MAVLINK_MSG_ID_GLOBAL_POSITION_INT: {
-        msgName = "GLOBAL_POSITION_INT";
-        mavlink_global_position_int_t gpos;
-        mavlink_msg_global_position_int_decode(&message, &gpos);
-        fields << QString::number(gpos.lat)
-               << QString::number(gpos.lon)
-               << QString::number(gpos.alt)
-               << QString::number(gpos.relative_alt)
-               << QString::number(gpos.vx)
-               << QString::number(gpos.vy)
-               << QString::number(gpos.vz)
-               << QString::number(gpos.hdg);
-        break;
-    }
-    case MAVLINK_MSG_ID_VFR_HUD: {
-        msgName = "VFR_HUD";
-        mavlink_vfr_hud_t hud;
-        mavlink_msg_vfr_hud_decode(&message, &hud);
-        fields << QString::number(hud.airspeed, 'f', 1)
-               << QString::number(hud.groundspeed, 'f', 1)
-               << QString::number(hud.heading)
-               << QString::number(hud.throttle)
-               << QString::number(hud.alt, 'f', 1)
-               << QString::number(hud.climb, 'f', 1);
-        break;
-    }
-    case MAVLINK_MSG_ID_BATTERY_STATUS: {
-        msgName = "BATTERY_STATUS";
-        mavlink_battery_status_t bat;
-        mavlink_msg_battery_status_decode(&message, &bat);
-        fields << QString::number(bat.temperature)
-               << QString::number(bat.voltages[0])
-               << QString::number(bat.current_consumed)
-               << QString::number(bat.battery_remaining);
-        break;
-    }
-    default:
-        msgName = QString("ID_%1").arg(message.msgid);
-        break;
-    }
-
-    // Pad fields to 8 columns
-    while (fields.size() < 8) fields << "";
 
     stream << timestamp << ","
            << message.msgid << ","
            << msgName << ","
            << message.sysid << ","
            << message.compid << ","
-           << fields.join(",") << "\n";
+           << dataFields.join(";") << "\n";
 
     stream.flush();
     _mavlinkCsvMsgCount++;

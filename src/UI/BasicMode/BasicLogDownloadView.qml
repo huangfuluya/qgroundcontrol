@@ -345,21 +345,40 @@ Item {
                             spacing: _margins * 0.5
 
                             QGCLabel {
-                                text:       qsTr("记录的 MAVLink 消息类型：")
+                                text:       qsTr("记录格式说明：")
                                 font.bold:  true
                             }
 
-                            QGCLabel { text: "HEARTBEAT (0) - " + qsTr("心跳、飞行模式、解锁状态") }
-                            QGCLabel { text: "SYS_STATUS (1) - " + qsTr("电压、电流、电池剩余") }
-                            QGCLabel { text: "GPS_RAW_INT (24) - " + qsTr("GPS定位、经纬度、卫星数") }
-                            QGCLabel { text: "SCALED_PRESSURE (29) - " + qsTr("气压、温度") }
-                            QGCLabel { text: "ATTITUDE (30) - " + qsTr("横滚、俯仰、偏航") }
-                            QGCLabel { text: "GLOBAL_POSITION_INT (33) - " + qsTr("全局位置、速度、航向") }
-                            QGCLabel { text: "VFR_HUD (74) - " + qsTr("空速、地速、高度、爬升率") }
-                            QGCLabel { text: "BATTERY_STATUS (147) - " + qsTr("电池温度、电压、消耗") }
                             QGCLabel {
-                                text:       qsTr("其他消息 - 仅记录消息ID和名称")
+                                text:       qsTr("记录本机收到的所有 MAVLink 消息，每条消息的所有字段均按名称解码并以十进制记录。")
+                                wrapMode:   Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            QGCLabel {
+                                text:       qsTr("CSV 列：Timestamp, MsgID, MsgName, SysID, CompID, Data")
+                                wrapMode:   Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            QGCLabel {
+                                text:       qsTr("Data 列为 字段名=值 对，以分号分隔，例如：")
+                                wrapMode:   Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            QGCLabel {
+                                text:       "ATTITUDE: time_boot_ms=12345;roll=-0.012;pitch=0.034;yaw=1.571;..."
                                 color:      "#AAAAAA"
+                                wrapMode:   Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            QGCLabel {
+                                text:       qsTr("数组字段按下标展开，如 voltages[0]=xxx；文本字段以引号字符串记录；方言表之外的未知消息按字节以十进制记录（byte0=..;byte1=..）。")
+                                color:      "#AAAAAA"
+                                wrapMode:   Text.WordWrap
+                                Layout.fillWidth: true
                             }
                         }
                     }
