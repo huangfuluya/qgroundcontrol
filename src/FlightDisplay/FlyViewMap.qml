@@ -712,35 +712,9 @@ FlightMap {
                         }
                     }
 
-                    QGCButton {
-                        Layout.fillWidth:   true
-                        text:               qsTr("设为返航点")
-                        visible:            _guidedController.showSetHome
-                        onClicked: {
-                            mapClickDropPanel.close()
-                            _guidedController.confirmAction(_guidedController.actionSetHome, mapClickCoord)
-                        }
-                    }
 
-                    QGCButton {
-                        Layout.fillWidth:   true
-                        text:               qsTr("设为估计原点")
-                        visible:            _guidedController.showSetEstimatorOrigin
-                        onClicked: {
-                            mapClickDropPanel.close()
-                            _guidedController.confirmAction(_guidedController.actionSetEstimatorOrigin, mapClickCoord)
-                        }
-                    }
 
-                    QGCButton {
-                        Layout.fillWidth:   true
-                        text:               qsTr("设置航向")
-                        visible:            _guidedController.showChangeHeading
-                        onClicked: {
-                            mapClickDropPanel.close()
-                            _guidedController.confirmAction(_guidedController.actionChangeHeading, mapClickCoord)
-                        }
-                    }
+
 
                     ColumnLayout {
                         spacing: 0
@@ -755,8 +729,7 @@ FlightMap {
     onMapClicked: (position) => {
         if (!_guidedController.guidedUIVisible && 
             (_guidedController.showGotoLocation || _guidedController.showOrbit ||
-             _guidedController.showROI || _guidedController.showSetHome ||
-             _guidedController.showSetEstimatorOrigin)) {
+             _guidedController.showROI)) {
 
             position = Qt.point(position.x, position.y)
             var clickCoord = _root.toCoordinate(position, false /* clipToViewPort */)

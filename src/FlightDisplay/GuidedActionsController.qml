@@ -58,7 +58,6 @@ Item {
     readonly property string gotoTitle:                     qsTr("Go To Location")
     readonly property string vtolTransitionTitle:           qsTr("VTOL Transition")
     readonly property string roiTitle:                      qsTr("ROI")
-    readonly property string setHomeTitle:                  qsTr("Set Home")
     readonly property string setEstimatorOriginTitle:       qsTr("Set Estimator origin")
     readonly property string setFlightMode:                 qsTr("Set Flight Mode")
     readonly property string changeHeadingTitle:            qsTr("Change Heading")
@@ -90,7 +89,6 @@ Item {
     readonly property string vtolTransitionFwdMessage:          qsTr("Transition VTOL to fixed wing flight.")
     readonly property string vtolTransitionMRMessage:           qsTr("Transition VTOL to multi-rotor flight.")
     readonly property string roiMessage:                        qsTr("Make the specified location a Region Of Interest.")
-    readonly property string setHomeMessage:                    qsTr("Set vehicle home as the specified location. This will affect Return to Home position")
     readonly property string setEstimatorOriginMessage:         qsTr("Make the specified location the estimator origin.")
     readonly property string setFlightModeMessage:              qsTr("Set the vehicle flight mode to %1").arg(_actionData)
     readonly property string changeHeadingMessage:              qsTr("Set the vehicle heading towards the specified location.")
@@ -120,10 +118,7 @@ Item {
     readonly property int actionForceArm:                   24
     readonly property int actionChangeSpeed:                25
     readonly property int actionGripper:                    26
-    readonly property int actionSetHome:                    27
-    readonly property int actionSetEstimatorOrigin:         28
     readonly property int actionSetFlightMode:              29
-    readonly property int actionChangeHeading:              30
     readonly property int actionMVArm:                      31
     readonly property int actionMVDisarm:                   32
     readonly property int actionChangeLoiterRadius:         33
@@ -160,10 +155,8 @@ Item {
     property bool showROI:                  _guidedActionsEnabled && _vehicleFlying && __roiSupported
     property bool showLandAbort:            _guidedActionsEnabled && _vehicleFlying && _fixedWingOnApproach
     property bool showGotoLocation:         _guidedActionsEnabled && (_vehicleFlying || _vehicleArmed)
-    property bool showSetHome:              _guidedActionsEnabled
     property bool showGripper:              _initialConnectComplete ? _activeVehicle.hasGripper : false
-    property bool showSetEstimatorOrigin:   _activeVehicle && !(_activeVehicle.sensorsPresentBits & Vehicle.SysStatusSensorGPS)
-    property bool showChangeHeading:        _guidedActionsEnabled && _vehicleFlying
+
 
     property string changeSpeedTitle:   _vehicleInFwdFlight ? changeAirspeedTitle : changeCruiseSpeedTitle
     property string changeSpeedMessage: _vehicleInFwdFlight ? changeAirspeedMessage : changeCruiseSpeedMessage
@@ -569,22 +562,9 @@ Item {
             confirmDialog.message = gripperMessage
             _widgetLayer._gripperMenu.createObject(mainWindow).open()
             break
-        case actionSetHome:
-            confirmDialog.title = setHomeTitle
-            confirmDialog.message = setHomeMessage
-            confirmDialog.hideTrigger = Qt.binding(function() { return !showSetHome })
-            break
-        case actionSetEstimatorOrigin:
-            confirmDialog.title = setEstimatorOriginTitle
-            confirmDialog.message = setEstimatorOriginMessage
-            break
         case actionSetFlightMode:
             confirmDialog.title = setFlightMode
             confirmDialog.message = setFlightModeMessage
-            break
-        case actionChangeHeading:
-            confirmDialog.title = changeHeadingTitle
-            confirmDialog.message = changeHeadingMessage
             break
         default:
             if (!customController.customConfirmAction(actionCode, actionData, mapIndicator, confirmDialog)) {
@@ -718,17 +698,8 @@ Item {
         case actionGripper:           
             _gripperFunction === undefined ? _activeVehicle.sendGripperAction(Vehicle.Invalid_option) : _activeVehicle.sendGripperAction(_gripperFunction)
             break
-        case actionSetHome:
-            _activeVehicle.doSetHome(actionData)
-            break
-        case actionSetEstimatorOrigin:
-            _activeVehicle.setEstimatorOrigin(actionData)
-            break
         case actionSetFlightMode:
             _activeVehicle.flightMode = actionData
-            break
-        case actionChangeHeading:
-            _activeVehicle.guidedModeChangeHeading(actionData)
             break
         default:
             if (!customController.customExecuteAction(actionCode, actionData, sliderOutputValue, optionChecked)) {

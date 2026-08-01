@@ -554,7 +554,7 @@ Item {
         text:       qsTr("确定要执行一键返航吗？\n无人船将立即返回预设的返航点。")
         buttons:    MessageDialog.Yes | MessageDialog.No
         onButtonClicked: function (button, role) {
-            if (button === MessageDialog.Yes && _activeVehicle) { _activeVehicle.guidedModeRTL() }
+            if (button === MessageDialog.Yes && _activeVehicle) { _activeVehicle.guidedModeRTL(false) }
         }
     }
 
