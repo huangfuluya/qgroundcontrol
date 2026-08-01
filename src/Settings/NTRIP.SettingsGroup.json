@@ -1,0 +1,57 @@
+{
+    "version":      1,
+    "fileType":     "FactMetaData",
+    "QGC.MetaData.Facts":
+[
+{
+    "name":                 "ntripServerConnectEnabled",
+    "shortDesc":            "Connect to NTRIP server",
+    "longDesc":             "Connect to an NTRIP caster over the network to receive RTCM correction data, which is forwarded to the vehicle.",
+    "type":                 "bool",
+    "default":              false
+},
+{
+    "name":                 "ntripServerHostAddress",
+    "shortDesc":            "Host address",
+    "longDesc":             "Address of the NTRIP caster.",
+    "type":                 "string",
+    "default":              ""
+},
+{
+    "name":                 "ntripServerPort",
+    "shortDesc":            "Server port",
+    "longDesc":             "Port of the NTRIP caster.",
+    "type":                 "int32",
+    "default":              2101,
+    "min":                  1,
+    "max":                  65535,
+    "decimalPlaces":        0
+},
+{
+    "name":                 "ntripUsername",
+    "shortDesc":            "Username",
+    "type":                 "string",
+    "default":              ""
+},
+{
+    "name":                 "ntripPassword",
+    "shortDesc":            "Password",
+    "type":                 "string",
+    "default":              ""
+},
+{
+    "name":                 "ntripMountpoint",
+    "shortDesc":            "Mountpoint",
+    "longDesc":             "NTRIP mountpoint. Leave blank for raw RTCM over TCP without NTRIP handshake.",
+    "type":                 "string",
+    "default":              ""
+},
+{
+    "name":                 "ntripWhitelist",
+    "shortDesc":            "RTCM message whitelist",
+    "longDesc":             "Comma separated list of RTCM message ids to forward to the vehicle (e.g. 1005,1074,1084,1230). Leave blank to forward all messages.",
+    "type":                 "string",
+    "default":              ""
+}
+]
+}

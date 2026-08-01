@@ -24,6 +24,7 @@
 #include "FlyViewSettings.h"
 #include "GimbalControllerSettings.h"
 #include "MapsSettings.h"
+#include "NTRIPSettings.h"
 #include "OfflineMapsSettings.h"
 #include "PlanViewSettings.h"
 #include "RemoteIDSettings.h"
@@ -85,6 +86,7 @@ void SettingsManager::init()
     _offlineMapsSettings = new OfflineMapsSettings(this);
     _planViewSettings = new PlanViewSettings(this);
     _remoteIDSettings = new RemoteIDSettings(this);
+    _ntripSettings = new NTRIPSettings(this);
     _rtkSettings = new RTKSettings(this);
     _videoSettings = new VideoSettings(this);
     _mavlinkSettings = new MavlinkSettings(this);
@@ -111,6 +113,7 @@ MapsSettings *SettingsManager::mapsSettings() const { return _mapsSettings; }
 OfflineMapsSettings *SettingsManager::offlineMapsSettings() const { return _offlineMapsSettings; }
 PlanViewSettings *SettingsManager::planViewSettings() const { return _planViewSettings; }
 RemoteIDSettings *SettingsManager::remoteIDSettings() const { return _remoteIDSettings; }
+NTRIPSettings *SettingsManager::ntripSettings() const { return _ntripSettings; }
 RTKSettings *SettingsManager::rtkSettings() const { return _rtkSettings; }
 UnitsSettings *SettingsManager::unitsSettings() const { return _unitsSettings; }
 VideoSettings *SettingsManager::videoSettings() const { return _videoSettings; }

@@ -30,6 +30,7 @@ class OfflineMapsSettings;
 class PlanViewSettings;
 class RemoteIDSettings;
 class RTKSettings;
+class NTRIPSettings;
 class UnitsSettings;
 class VideoSettings;
 class Viewer3DSettings;
@@ -58,6 +59,7 @@ class SettingsManager : public QObject
     Q_MOC_INCLUDE("FlyViewSettings.h")
     Q_MOC_INCLUDE("GimbalControllerSettings.h")
     Q_MOC_INCLUDE("MapsSettings.h")
+    Q_MOC_INCLUDE("NTRIPSettings.h")
     Q_MOC_INCLUDE("OfflineMapsSettings.h")
     Q_MOC_INCLUDE("PlanViewSettings.h")
     Q_MOC_INCLUDE("RemoteIDSettings.h")
@@ -86,6 +88,7 @@ class SettingsManager : public QObject
     Q_PROPERTY(QObject *offlineMapsSettings             READ offlineMapsSettings            CONSTANT)
     Q_PROPERTY(QObject *planViewSettings                READ planViewSettings               CONSTANT)
     Q_PROPERTY(QObject *remoteIDSettings                READ remoteIDSettings               CONSTANT)
+    Q_PROPERTY(QObject *ntripSettings                   READ ntripSettings                  CONSTANT)
     Q_PROPERTY(QObject *rtkSettings                     READ rtkSettings                    CONSTANT)
     Q_PROPERTY(QObject *unitsSettings                   READ unitsSettings                  CONSTANT)
     Q_PROPERTY(QObject *videoSettings                   READ videoSettings                  CONSTANT)
@@ -120,6 +123,7 @@ public:
     OfflineMapsSettings *offlineMapsSettings() const;
     PlanViewSettings *planViewSettings() const;
     RemoteIDSettings *remoteIDSettings() const;
+    NTRIPSettings *ntripSettings() const;
     RTKSettings *rtkSettings() const;
     UnitsSettings *unitsSettings() const;
     VideoSettings *videoSettings() const;
@@ -147,6 +151,7 @@ private:
     OfflineMapsSettings *_offlineMapsSettings = nullptr;
     PlanViewSettings *_planViewSettings = nullptr;
     RemoteIDSettings *_remoteIDSettings = nullptr;
+    NTRIPSettings *_ntripSettings = nullptr;
     RTKSettings *_rtkSettings = nullptr;
     UnitsSettings *_unitsSettings = nullptr;
     VideoSettings *_videoSettings = nullptr;

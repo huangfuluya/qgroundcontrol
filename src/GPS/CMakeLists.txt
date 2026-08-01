@@ -12,6 +12,10 @@ target_sources(${CMAKE_PROJECT_NAME}
         GPSRtk.h
         GPSRTKFactGroup.cc
         GPSRTKFactGroup.h
+        NTRIP/NTRIPManager.cc
+        NTRIP/NTRIPManager.h
+        NTRIP/NtripTcpClient.cc
+        NTRIP/NtripTcpClient.h
         RTCMMavlink.cc
         RTCMMavlink.h
         satellite_info.h
@@ -19,9 +23,9 @@ target_sources(${CMAKE_PROJECT_NAME}
         sensor_gps.h
 )
 
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Qt6::Core)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Qt6::Core Qt6::Network)
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/NTRIP)
 
 #===========================================================================#
 

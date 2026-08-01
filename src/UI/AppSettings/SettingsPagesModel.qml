@@ -70,6 +70,13 @@ ListModel {
     }
 
     ListElement {
+        name: qsTr("NTRIP/RTK")
+        url: "qrc:/qml/QGroundControl/AppSettings/NTRIPSettings.qml"
+        iconUrl: "qrc:/InstrumentValueIcons/globe.svg"
+        pageVisible: function() { return QGroundControl.settingsManager.ntripSettings.visible }
+    }
+
+    ListElement {
         name: qsTr("PX4 Log Transfer")
         url: "qrc:/qml/QGroundControl/AppSettings/PX4LogTransferSettings.qml"
         iconUrl: "qrc:/InstrumentValueIcons/inbox-download.svg"

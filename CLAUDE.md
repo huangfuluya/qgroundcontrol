@@ -442,4 +442,54 @@ src/VideoManager/VideoReceiver/GStreamer/gstqml6gl/qt6/qt6glitem.cc     (+16/-2)
 - 每条消息实时 `flush()` 写盘，~100-200Hz 遥测下主线程有 IO 压力，目前可接受；如需优化可改缓冲批量写入
 - 左侧板载日志下载（LogDownloadController）与本次改动无关
 
+---
+
+## 网络 RTK (NTRIP) 差分注入 (2026-08-01)
+
+**背景**: 原代码仅支持本地串口 RTK 基站（GPSProvider → RTCMMavlink → 飞控），`src/GPS/NTRIP/` 目录为空，无网络差分功能。本次实现完整 NTRIP 客户端，将 caster 的 RTCM 数据经 MAVLink `GPS_RTCM_DATA` 注入飞控。
+
+### 架构
+
+```
+NTRIP caster (TCP) → NtripTcpClient (握手/RTCM3解析/CRC24Q校验/白名单过滤)
+                   → NTRIPManager (重连/GGA上报/状态)
+                   → RTCMMavlink → GPS_RTCM_DATA → 所有已连接车辆
+```
+
+全程 GUI 线程异步（QTcpSocket 非阻塞），未引入额外线程。
+
+### 新增文件
+
+| 文件 | 说明 |
+|------|------|
+| `src/GPS/NTRIP/NtripTcpClient.cc/h` | NTRIP v1(`ICY 200 OK`)/v2(HTTP) 握手、Basic 鉴权、RTCM3 帧解析 + CRC24Q 表驱动校验、消息 ID 白名单、GGA 发送；挂载点留空走原始 RTCM-over-TCP |
+| `src/GPS/NTRIP/NTRIPManager.cc/h` | 断线 5s 重连、每 10s 上报 GGA（优先飞行器坐标，回退 QGCPositionManager）、暴露 `ntripStatus`/`connected` 给 QML |
+| `src/Settings/NTRIPSettings.cc/h` + `NTRIP.SettingsGroup.json` | 7 个配置项：开关/地址/端口/用户名/密码/挂载点/白名单；设置修改即时生效自动重连，无需重启 |
+| `src/UI/AppSettings/NTRIPSettings.qml` | 设置页，含实时状态（绿=已连接/橙=连接中/红=错误） |
+
+### 修改文件
+
+| 文件 | 改动 |
+|------|------|
+| `SettingsManager.cc/h` | 注册 `ntripSettings` 组（QML 经 `QGroundControl.settingsManager.ntripSettings` 访问） |
+| `GPSManager.cc/h` | 持有 `NTRIPManager`（GPSManager 为 Q_APPLICATION_STATIC，首次 instance() 时创建，晚于 SettingsManager::init，时序安全） |
+| `QGroundControlQmlGlobal.cc/h` | 暴露 `QGroundControl.ntripManager`（`#ifndef QGC_NO_SERIAL_LINK` 保护） |
+| `SettingsPagesModel.qml` | 新增 "NTRIP/RTK" 页入口 |
+| `src/GPS/CMakeLists.txt` | 加入 NTRIP 源文件 + `Qt6::Network` + NTRIP 头文件路径 |
+| `src/Settings/CMakeLists.txt`、`src/UI/AppSettings/CMakeLists.txt`、`qgroundcontrol.qrc` | 构建/资源注册 |
+
+### 关键实现要点
+
+- **CRC24Q 表驱动**：与 PX4-GPSDrivers 位运算实现经 1000 组随机数据验证完全等价
+- **RTCM 帧解析**：0xD3 前导 + 10bit 长度 + CRC24Q 校验，校验失败逐字节重同步，防无限循环
+- **GGA 格式**：`$GPGGA,hhmmss.ss,ddmm.mmmm,N/S,dddmm.mmmm,E/W,1,12,0.8,alt,M,0.0,M,,*CS`（VRS 挂载点必需）
+- **错误后必重连**：`_onSocketError` 中检测 socket 已 Unconnected 时主动补发 `disconnected()`（Qt 某些错误路径不再发该信号）
+- **`_onSocketConnected` 状态守卫**：防止连接中途用户停止后迟到的 connected 信号误发握手
+- 注意：**本地串口 RTK 基站与 NTRIP 不要同时使用**，两路 RTCM 会同时注入飞控
+
+### 本仓库与上游差异备忘
+
+- 本版本 FactMetaData JSON 键名为 `shortDesc`/`longDesc`/`default`（上游新版为 `shortDescription`/`defaultValue`）
+- 上游 master 的 NTRIP 实现为 22 文件复杂架构（2026-02 重写），本实现为精简版（4 文件），未含 SPARTN/Source Table 浏览器/UDP 转发
+
 
