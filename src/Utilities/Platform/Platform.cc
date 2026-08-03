@@ -191,9 +191,14 @@ std::optional<int> Platform::initialize(int argc, char* argv[],
 #endif
 
 #ifdef Q_OS_WIN
-    if (!qEnvironmentVariableIsSet("QT_WIN_DEBUG_CONSOLE")) {
-        (void) qputenv("QT_WIN_DEBUG_CONSOLE", "attach");
-    }
+    // Qt 6.11+ initDebuggingConsole() calls AttachConsole + freopen_s and then
+    // Q_ASSERT(in == stdin). When the process is a GUI subsystem app launched
+    // without an inherited console, MSVC CRT may return a different FILE* from
+    // freopen_s, crashing in Debug builds. Skip the automatic attach so the
+    // user can opt in via QT_WIN_DEBUG_CONSOLE when a real console is present.
+    // if (!qEnvironmentVariableIsSet("QT_WIN_DEBUG_CONSOLE")) {
+    //     (void) qputenv("QT_WIN_DEBUG_CONSOLE", "attach");
+    // }
     if (qEnvironmentVariable("QSG_RHI_BACKEND").compare(QLatin1String("d3d12"), Qt::CaseInsensitive) == 0) {
         // Qt 6.10 does not reliably select D3D12 from QSG_RHI_BACKEND on Windows. Make the test/diagnostic override
         // explicit before the scene graph is initialized; the default path remains Qt's D3D11 backend.

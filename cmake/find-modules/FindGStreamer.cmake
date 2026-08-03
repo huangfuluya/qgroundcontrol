@@ -220,11 +220,13 @@ function(_gst_create_component_target _gst_PLUGIN _gst_PC_NAME)
 
     if (GStreamer_FIND_REQUIRED_${_gst_PLUGIN})
         set(_gst_PLUGIN_REQUIRED REQUIRED)
+        set(_gst_PLUGIN_QUIET)
     else()
         set(_gst_PLUGIN_REQUIRED)
+        set(_gst_PLUGIN_QUIET QUIET)
     endif()
 
-    pkg_check_modules(PC_GStreamer_${_gst_PLUGIN} ${_gst_PLUGIN_REQUIRED} "${_gst_PC_NAME}")
+    pkg_check_modules(PC_GStreamer_${_gst_PLUGIN} ${_gst_PLUGIN_QUIET} ${_gst_PLUGIN_REQUIRED} "${_gst_PC_NAME}")
     _gst_recover_split_pkgconfig_paths(PC_GStreamer_${_gst_PLUGIN}
         INCLUDE_DIRS CFLAGS_OTHER
         STATIC_INCLUDE_DIRS STATIC_CFLAGS_OTHER
