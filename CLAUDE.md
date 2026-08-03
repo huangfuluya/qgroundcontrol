@@ -95,3 +95,40 @@ build_qgc.bat deploy
 3. 在目标电脑上安装 VC++ Redist：`staging\bin\vc_redist.x64.exe`
 4. 双击 `staging\bin\QGroundControl.exe` 即可运行
 5. 如需生成 NSIS 安装包，需安装 NSIS 并确保 `makensis.exe` 在 PATH 中
+
+---
+
+# 窗口标题改为"致远无人机" — 2026-08-03
+
+## 需求
+
+将 QGC 左上角标题从 `QGroundControl Daily` 改为 `致远无人机`。
+
+## 标题来源分析
+
+| 层级 | 位置 | 说明 |
+|---|---|---|
+| `applicationName` 拼接 | `src/QGCApplication.cc:88-96` | Daily Build 下拼接为 `QGC_APP_NAME + " Daily"`，`setApplicationName()` 后 Qt 桌面平台将其作为窗口标题 |
+| `QGC_APP_NAME` 定义 | `cmake/CustomOptions.cmake:17` | 值为 `"QGroundControl"` |
+| QML 主窗口 | `src/MainWindow/MainWindow.qml:17` | `ApplicationWindow` 未显式设 `title`，沿用 `applicationName` |
+
+## 修改方案
+
+选择方案 A：在 QML 层显式设置 `title`，与 `applicationName` 解耦。
+
+**优点**：不影响 QSettings key、RunGuardKey、单实例锁、日志目录等底层基础设施（这些由 `QGC_APP_NAME` 英文标识符承担）。
+
+## 修改内容
+
+### `src/MainWindow/MainWindow.qml`（第 20 行）
+
+```qml
+ApplicationWindow {
+    id:         mainWindow
+    visible:    true
+    title:      qsTr("致远无人机")   // ← 新增
+```
+
+**被排除的候选方案**：
+- 改 `QGC_APP_NAME`：会同时影响 QSettings 存储路径、单实例锁、命令行帮助文本、Linux `.desktop` 文件名等，副作用大，且非 ASCII 名称在部分 Linux DE / Windows 任务栏可能异常。
+- 改 `QGCApplication.cc`：同样污染 `applicationName` 关联的底层基础设施字符串。
