@@ -370,18 +370,26 @@ src/VideoManager/VideoReceiver/GStreamer/gstqml6gl/qt6/qt6glitem.cc     (+16/-2)
 - 保留 RANGEFINDER 处理作为回退（`#ifndef QGC_NO_ARDUPILOT_DIALECT` 保护）
 - 不判断传感器 `orientation`（只有单路水深传感器）
 
-### 一键返航按钮行为分析 (2026-07-04)
+### 基础模式右侧返航按钮 (2026-08-04)
 
-**文件**: `src/UI/BasicMode/BasicFlyView.qml` + C++ 固件插件
+**文件**: `src/UI/BasicMode/BasicFlyView.qml` + `translations/qgc_zh_CN.ts`
 
-点击"一键返航"按钮的完整调用链：
+右侧面板从上到下共三个按钮：
+
+| 按钮 | 颜色 | C++ 调用 | 飞控模式 | 行为 |
+|------|------|----------|----------|------|
+| 直线返航 (`btnRTL`) | 红色 `#E74C3C` | `guidedModeRTL(false)` | RTL | 最短路径直线返回返航点 |
+| 原路返航 (`btnSmartRTL`) | 橙色 `#E67E22` | `guidedModeRTL(true)` | Smart RTL | 沿来时路径原路返回返航点 |
+| 解锁/锁定 (`btnArm`) | 绿/黄 | `armed = true/false` | — | 电机解锁/锁定 |
+
+完整调用链（以直线返航为例）：
 
 | 步骤 | 位置 | 动作 |
 |------|------|------|
-| ① UI 确认 | `BasicFlyView.qml:460` | 弹出确认对话框 `confirmRTLDialog` |
-| ② 调用 Vehicle | `Vehicle.cc:2088` | `Vehicle::guidedModeRTL(false)` 检查引导模式支持 |
-| ③ 固件分发 | `APMFirmwarePlugin.cc:844` / `PX4FirmwarePlugin.cc:309` | APM → `RTL` 模式，PX4 → `AUTO_RTL` 模式 |
-| ④ 模式切换+验证 | `FirmwarePlugin.cc:263` | `_setFlightModeAndValidate` 发送 MAVLink `SET_MODE` 命令，最多重试3次，每次等待1.3秒 |
+| ① UI 确认 | `BasicFlyView.qml` | 弹出确认对话框 `confirmRTLDialog` / `confirmSmartRTLDialog` |
+| ② 调用 Vehicle | `Vehicle.cc:2088` | `Vehicle::guidedModeRTL(bool smartRTL)` 检查引导模式支持 |
+| ③ 固件分发 | `APMFirmwarePlugin.cc:844` | `smartRTL ? smartRTLFlightMode() : rtlFlightMode()` |
+| ④ 模式切换+验证 | `FirmwarePlugin.cc:263` | `_setFlightModeAndValidate` 发送 MAVLink `SET_MODE`，最多重试3次，每次等待1.3秒 |
 | ⑤ 飞控执行 | 飞控固件 | 自主导航返回 home 点 |
 
 ---

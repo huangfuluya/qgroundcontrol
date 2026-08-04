@@ -453,7 +453,7 @@ Item {
 
         QGCButton {
             anchors.fill:       parent
-            text:               qsTr("一键返航")
+            text:               qsTr("直线返航")
             font.pointSize:     ScreenTools.largeFontPointSize
             enabled:            _activeVehicle !== null
             backgroundColor:    "#E74C3C"
@@ -462,8 +462,35 @@ Item {
     }
 
     Rectangle {
-        id:                     btnArm
+        id:                     btnSmartRTL
         anchors.top:            btnRTL.bottom
+        anchors.topMargin:      _margins
+        anchors.right:          parent.right
+        anchors.rightMargin:    _margins
+        width:                  ScreenTools.defaultFontPixelWidth * 16
+        height:                 ScreenTools.defaultFontPixelHeight * 4
+        color:                  Qt.rgba(0, 0, 0, 0.55)
+        border.color:           Qt.rgba(1, 1, 1, 0.15)
+        radius:                 4
+        visible:                !QGroundControl.videoManager.fullScreen
+
+        DeadMouseArea {
+            anchors.fill: parent
+        }
+
+        QGCButton {
+            anchors.fill:       parent
+            text:               qsTr("原路返航")
+            font.pointSize:     ScreenTools.largeFontPointSize
+            enabled:            _activeVehicle !== null
+            backgroundColor:    "#E67E22"
+            onClicked: { if (_activeVehicle) confirmSmartRTLDialog.open() }
+        }
+    }
+
+    Rectangle {
+        id:                     btnArm
+        anchors.top:            btnSmartRTL.bottom
         anchors.topMargin:      _margins
         anchors.right:          parent.right
         anchors.rightMargin:    _margins
@@ -551,10 +578,20 @@ Item {
     MessageDialog {
         id:         confirmRTLDialog
         title:      qsTr("确认操作")
-        text:       qsTr("确定要执行一键返航吗？\n无人船将立即返回预设的返航点。")
+        text:       qsTr("确定要执行直线返航吗？\n无人船将切换到RTL模式，直线返回返航点。")
         buttons:    MessageDialog.Yes | MessageDialog.No
         onButtonClicked: function (button, role) {
             if (button === MessageDialog.Yes && _activeVehicle) { _activeVehicle.guidedModeRTL(false) }
+        }
+    }
+
+    MessageDialog {
+        id:         confirmSmartRTLDialog
+        title:      qsTr("确认操作")
+        text:       qsTr("确定要执行原路返航吗？\n无人船将切换到Smart RTL模式，沿原路径返回返航点。")
+        buttons:    MessageDialog.Yes | MessageDialog.No
+        onButtonClicked: function (button, role) {
+            if (button === MessageDialog.Yes && _activeVehicle) { _activeVehicle.guidedModeRTL(true) }
         }
     }
 

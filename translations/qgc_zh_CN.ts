@@ -18269,8 +18269,8 @@ Confirm change?</translation>
       <translation>弱</translation>
     </message>
     <message>
-      <source>一键返航</source>
-      <translation>一键返航</translation>
+      <source>直线返航</source>
+      <translation>直线返航</translation>
     </message>
     <message>
       <source>紧急停船</source>
@@ -18281,8 +18281,16 @@ Confirm change?</translation>
       <translation>确认操作</translation>
     </message>
     <message>
-      <source>确定要执行一键返航吗？\n无人船将立即返回预设的返航点。</source>
-      <translation>确定要执行一键返航吗？\n无人船将立即返回预设的返航点。</translation>
+      <source>确定要执行直线返航吗？\n无人船将切换到RTL模式，直线返回返航点。</source>
+      <translation>确定要执行直线返航吗？\n无人船将切换到RTL模式，直线返回返航点。</translation>
+    </message>
+    <message>
+      <source>原路返航</source>
+      <translation>原路返航</translation>
+    </message>
+    <message>
+      <source>确定要执行原路返航吗？\n无人船将切换到Smart RTL模式，沿原路径返回返航点。</source>
+      <translation>确定要执行原路返航吗？\n无人船将切换到Smart RTL模式，沿原路径返回返航点。</translation>
     </message>
     <message>
       <source>确定要紧急停船吗？\n无人船将立即切换到保持模式并原地待命。</source>
