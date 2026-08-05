@@ -9,9 +9,9 @@
 
 // 航行监控 - Navigation Monitor Tab
 // 主视图支持地图/视频双窗口切换，并保留基础模式的状态与操作叠加层
-// 左侧：紧凑状态条（6项指示器）+ 云台控制按钮面板（3行x2列，拍照/录像/变焦远/变焦近/夜视/补光）+ 圆形回中按钮
-// 右侧：快捷操作按钮（3个）
-// 底部：快捷模式切换按钮（4个，水平平铺）
+// 左侧：紧凑状态条（6项指示器）+ 控制面板（镜头切换 | 回中〇 | 拍照/录像 | 变焦(+)/(-) | 夜视/补光 | 预留）
+// 右侧：竖排操作列（直线返航/原路返航 + 手动/自动/抛锚模式切换）+ 大号圆形解锁/锁定按钮
+// 配色：室外高对比深色风格（深黑底 + 白色粗体字），仅解锁/锁定使用红绿配色
 
 import QtQuick
 import QtQuick.Controls
@@ -45,6 +45,20 @@ Item {
     property bool  _nightVisionOn:         false ///< Night vision toggle state
     property bool  _fillLightOn:           false ///< Fill light toggle state
     property int   _zoomPulseChannel:      -1    ///< Zoom channel, no ack wait
+
+    //-- Outdoor high-contrast color scheme
+    readonly property color _cPanelBg:      Qt.rgba(0, 0, 0, 0.75)      ///< Panel background
+    readonly property color _cPanelBorder:  Qt.rgba(1, 1, 1, 0.3)       ///< Panel border
+    readonly property color _cBtnBg:        "#2E2E2E"                   ///< Normal button background
+    readonly property color _cBtnText:      "#FFFFFF"                   ///< Normal button text
+    readonly property color _cValueText:    "#7CFC9B"                   ///< Status value / active-state green
+    readonly property color _cActiveBg:     "#1E4620"                   ///< Toggle-ON / current-mode background
+    readonly property color _cLabelText:    "#AAAAAA"                   ///< Status label text
+    readonly property color _cArmColor:     "#2E7D32"                   ///< Arm (unlock) green
+    readonly property color _cDisarmColor:  "#C62828"                   ///< Disarm (lock) red
+    readonly property real _cBtnW:          ScreenTools.defaultFontPixelWidth * 10  ///< Button cell width
+    readonly property real _cBtnH:          ScreenTools.defaultFontPixelHeight * 2.6  ///< Button cell height
+    readonly property real _leftPanelContentH: (_cBtnH * 1.0) + (_cBtnH * 1.4) + (4 * _cBtnH * 1.5) + (5 * _margins / 2)
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
@@ -84,8 +98,8 @@ Item {
 
         PipView {
             id:                     _pipView
-            anchors.left:           servoPanel.right
-            anchors.bottom:         quickModeBar.top
+            anchors.left:           leftPanel.right
+            anchors.bottom:         parent.bottom
             anchors.margins:        _pipMargin
             item1IsFullSettingsKey: "BasicModeMainFlyWindowIsMap"
             item1:                  mapControl
@@ -103,8 +117,8 @@ Item {
         anchors.bottom:         parent.bottom
         anchors.left:           parent.left
         width:                  ScreenTools.defaultFontPixelWidth * 8
-        color:                  Qt.rgba(0, 0, 0, 0.55)
-        border.color:           Qt.rgba(1, 1, 1, 0.15)
+        color:                  _cPanelBg
+        border.color:           _cPanelBorder
         visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
@@ -123,14 +137,14 @@ Item {
                 QGCLabel {
                     text:           qsTr("模式")
                     font.pointSize: ScreenTools.smallFontPointSize
-                    color:          "#AAAAAA"
+                    color:          _cLabelText
                     Layout.alignment: Qt.AlignHCenter
                 }
                 QGCLabel {
                     text:           _activeVehicle ? _activeVehicle.flightMode : "--"
                     font.pointSize: ScreenTools.smallFontPointSize
                     font.bold:      true
-                    color:          qgcPal.colorGreen
+                    color:          _cValueText
                     Layout.alignment: Qt.AlignHCenter
                     Layout.maximumWidth: parent.width - 4
                     horizontalAlignment: Text.AlignHCenter
@@ -146,14 +160,14 @@ Item {
                 QGCLabel {
                     text:           qsTr("航速")
                     font.pointSize: ScreenTools.smallFontPointSize
-                    color:          "#AAAAAA"
+                    color:          _cLabelText
                     Layout.alignment: Qt.AlignHCenter
                 }
                 QGCLabel {
                     text:           (_activeVehicle && _activeVehicle.groundSpeed && _activeVehicle.groundSpeed.value !== undefined) ? _activeVehicle.groundSpeed.value.toFixed(1) : "--"
                     font.pointSize: ScreenTools.defaultFontPointSize
                     font.bold:      true
-                    color:          qgcPal.colorGreen
+                    color:          _cValueText
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -167,14 +181,14 @@ Item {
                 QGCLabel {
                     text:           qsTr("航向")
                     font.pointSize: ScreenTools.smallFontPointSize
-                    color:          "#AAAAAA"
+                    color:          _cLabelText
                     Layout.alignment: Qt.AlignHCenter
                 }
                 QGCLabel {
                     text:           (_activeVehicle && _activeVehicle.heading && _activeVehicle.heading.value !== undefined) ? _activeVehicle.heading.value.toFixed(0) + "°" : "--"
                     font.pointSize: ScreenTools.defaultFontPointSize
                     font.bold:      true
-                    color:          qgcPal.colorGreen
+                    color:          _cValueText
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -188,7 +202,7 @@ Item {
                 QGCLabel {
                     text:           qsTr("电压")
                     font.pointSize: ScreenTools.smallFontPointSize
-                    color:          "#AAAAAA"
+                    color:          _cLabelText
                     Layout.alignment: Qt.AlignHCenter
                 }
                 QGCLabel {
@@ -201,16 +215,16 @@ Item {
                     font.pointSize: ScreenTools.defaultFontPointSize
                     font.bold:      true
                     color: {
-                        if (!_activeVehicle || !_activeVehicle.batteries || _activeVehicle.batteries.count === 0) return "#AAAAAA"
+                        if (!_activeVehicle || !_activeVehicle.batteries || _activeVehicle.batteries.count === 0) return _cLabelText
                         var battery = _activeVehicle.batteries.get(0)
-                        if (!battery || !battery.voltage || isNaN(battery.voltage.rawValue)) return "#AAAAAA"
+                        if (!battery || !battery.voltage || isNaN(battery.voltage.rawValue)) return _cLabelText
                         // Use percentRemaining for color if available, otherwise green
                         if (battery.percentRemaining && !isNaN(battery.percentRemaining.rawValue)) {
                             var pct = battery.percentRemaining.rawValue
                             if (pct < 20) return "red"
                             if (pct < 50) return "orange"
                         }
-                        return qgcPal.colorGreen
+                        return _cValueText
                     }
                     Layout.alignment: Qt.AlignHCenter
                 }
@@ -225,14 +239,14 @@ Item {
                 QGCLabel {
                     text:           qsTr("水深")
                     font.pointSize: ScreenTools.smallFontPointSize
-                    color:          "#AAAAAA"
+                    color:          _cLabelText
                     Layout.alignment: Qt.AlignHCenter
                 }
                 QGCLabel {
                     text:           (_activeVehicle && _activeVehicle.rangeFinderDist && _activeVehicle.rangeFinderDist.value !== undefined) ? _activeVehicle.rangeFinderDist.value.toFixed(1) + "m" : "--"
                     font.pointSize: ScreenTools.defaultFontPointSize
                     font.bold:      true
-                    color:          qgcPal.colorGreen
+                    color:          _cValueText
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -246,14 +260,14 @@ Item {
                 QGCLabel {
                     text:           qsTr("解锁")
                     font.pointSize: ScreenTools.smallFontPointSize
-                    color:          "#AAAAAA"
+                    color:          _cLabelText
                     Layout.alignment: Qt.AlignHCenter
                 }
                 Rectangle {
                     width:  ScreenTools.defaultFontPixelHeight * 1.2
                     height: width
                     radius: width / 2
-                    color:  _activeVehicle ? (_activeVehicle.armed ? qgcPal.colorGreen : "red") : "red"
+                    color:  _activeVehicle ? (_activeVehicle.armed ? _cArmColor : _cDisarmColor) : _cDisarmColor
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -262,17 +276,18 @@ Item {
         }
     }
 
-    //-- Left Side: Servo/PWM Control Buttons (3x2 grid, to the right of status strip)
+    //-- Left Side: Camera/PTZ Control Panel (to the right of status strip)
+    //   Row 1: 镜头切换 | Row 2: 回中 ○ | Rows 3-6: 2-column grid
     Rectangle {
-        id:                     servoPanel
+        id:                     leftPanel
         anchors.left:           leftStrip.right
         anchors.leftMargin:     _margins / 2
-        anchors.bottom:         quickModeBar.top
+        anchors.bottom:         parent.bottom
         anchors.bottomMargin:   _margins
-        width:                  ScreenTools.defaultFontPixelWidth * 20
-        height:                 ScreenTools.defaultFontPixelHeight * 22
-        color:                  Qt.rgba(0, 0, 0, 0.55)
-        border.color:           Qt.rgba(1, 1, 1, 0.15)
+        width:                  _cBtnW * 2 + _margins * 1.5
+        height:                 _leftPanelContentH + _margins + _cBtnH * 0.5
+        color:                  _cPanelBg
+        border.color:           _cPanelBorder
         radius:                 4
         visible:                !QGroundControl.videoManager.fullScreen
 
@@ -280,296 +295,349 @@ Item {
             anchors.fill: parent
         }
 
-        GridLayout {
+        ColumnLayout {
+            id:                 leftLayout
+            anchors.left:       parent.left
+            anchors.right:      parent.right
+            anchors.top:        parent.top
             anchors.margins:    _margins / 2
-            anchors.fill:       parent
-            columns:            2
-            rows:               3
-            columnSpacing:      _margins / 2
-            rowSpacing:         _margins / 2
+            spacing:            _margins / 2
 
-            // Row 1, Col 1: Photo
+            //-- Row 1: 镜头切换 (Camera / Map toggle)
             QGCButton {
-                Layout.fillWidth:   true
-                Layout.fillHeight:  true
-                text:               qsTr("拍照")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                enabled:            _activeVehicle !== null
-                opacity:            0.5
-                backgroundColor:    "#4A90D9"
-                onClicked: {
-                    if (_activeVehicle) {
-                        _servoPulseChannel = 10
-                        _activeVehicle.sendCommand(1, 183, false, 10, 2000, 0, 0, 0, 0, 0)
+                Layout.fillWidth:       true
+                Layout.preferredHeight: _cBtnH
+                text:                   qsTr("镜头切换")
+                pointSize:              ScreenTools.largeFontPointSize
+                fontWeight:             Font.Bold
+                showBorder:             true
+                textColor:              _cBtnText
+                enabled:                QGroundControl.videoManager.hasVideo
+                backgroundColor:        _cBtnBg
+                onClicked: { _pipView._swapPip() }
+            }
+
+            //-- Row 2: 回中 (circular, centered)
+            Rectangle {
+                Layout.alignment:           Qt.AlignHCenter
+                Layout.preferredWidth:      _cBtnH * 1.4
+                Layout.preferredHeight:     Layout.preferredWidth
+                radius:                     Layout.preferredWidth / 2
+                color:                      _cBtnBg
+                border.color:               _cValueText
+                border.width:               2
+
+                DeadMouseArea { anchors.fill: parent }
+
+                QGCLabel {
+                    anchors.centerIn:   parent
+                    text:               qsTr("回中")
+                    font.pointSize:     ScreenTools.largeFontPointSize
+                    font.bold:          true
+                    color:              _cBtnText
+                }
+
+                MouseArea {
+                    anchors.fill:   parent
+                    enabled:        _activeVehicle !== null
+                    onClicked: {
+                        if (_activeVehicle) {
+                            _activeVehicle.sendCommand(1, 205, false, 0, 0, 0, 0, 0, 0, 1)
+                        }
                     }
                 }
             }
 
-            // Row 1, Col 2: Video
-            QGCButton {
-                Layout.fillWidth:   true
-                Layout.fillHeight:  true
-                text:               qsTr("录像")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                enabled:            _activeVehicle !== null
-                opacity:            0.5
-                backgroundColor:    "#4A90D9"
-                onClicked: {
-                    if (_activeVehicle) {
-                        _servoPulseChannel = 10
-                        _activeVehicle.sendCommand(1, 183, false, 10, 1000, 0, 0, 0, 0, 0)
+            //-- Rows 3-6: 2-column grid (拍照/录像 | 变焦(+)/变焦(-) | 夜视/补光 | 预留/预留)
+            // Row 3: 拍照 | 录像
+            RowLayout {
+                Layout.fillWidth:       true
+                Layout.preferredHeight: _cBtnH
+                spacing:                _margins / 2
+                QGCButton {
+                    Layout.preferredWidth:  _cBtnW
+                    Layout.preferredHeight: _cBtnH
+                    text:                   qsTr("拍照")
+                    pointSize:              ScreenTools.defaultFontPointSize
+                    fontWeight:             Font.Bold
+                    showBorder:             true
+                    textColor:              _cBtnText
+                    enabled:                _activeVehicle !== null
+                    backgroundColor:        _cBtnBg
+                    onClicked: {
+                        if (_activeVehicle) {
+                            _servoPulseChannel = 10
+                            _activeVehicle.sendCommand(1, 183, false, 10, 2000, 0, 0, 0, 0, 0)
+                        }
+                    }
+                }
+                QGCButton {
+                    Layout.preferredWidth:  _cBtnW
+                    Layout.preferredHeight: _cBtnH
+                    text:                   qsTr("录像")
+                    pointSize:              ScreenTools.defaultFontPointSize
+                    fontWeight:             Font.Bold
+                    showBorder:             true
+                    textColor:              _cBtnText
+                    enabled:                _activeVehicle !== null
+                    backgroundColor:        _cBtnBg
+                    onClicked: {
+                        if (_activeVehicle) {
+                            _servoPulseChannel = 10
+                            _activeVehicle.sendCommand(1, 183, false, 10, 1000, 0, 0, 0, 0, 0)
+                        }
                     }
                 }
             }
 
-            // Row 2, Col 1: Zoom Tele (no ack wait)
-            QGCButton {
-                Layout.fillWidth:   true
-                Layout.fillHeight:  true
-                text:               qsTr("变焦远")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                enabled:            _activeVehicle !== null
-                opacity:            0.5
-                backgroundColor:    "#4A90D9"
-                onClicked: {
-                    if (_activeVehicle) {
-                        _activeVehicle.sendCommand(1, 183, false, 9, 1000, 0, 0, 0, 0, 0)
-                        _zoomPulseChannel = 9
-                        zoomResetTimer.restart()
+            // Row 4: 变焦(+) | 变焦(-)
+            RowLayout {
+                Layout.fillWidth:       true
+                Layout.preferredHeight: _cBtnH
+                spacing:                _margins / 2
+                QGCButton {
+                    Layout.preferredWidth:  _cBtnW
+                    Layout.preferredHeight: _cBtnH
+                    text:                   qsTr("变焦(+)")
+                    pointSize:              ScreenTools.defaultFontPointSize
+                    fontWeight:             Font.Bold
+                    showBorder:             true
+                    textColor:              _cBtnText
+                    enabled:                _activeVehicle !== null
+                    backgroundColor:        _cBtnBg
+                    onClicked: {
+                        if (_activeVehicle) {
+                            _activeVehicle.sendCommand(1, 183, false, 9, 1000, 0, 0, 0, 0, 0)
+                            _zoomPulseChannel = 9
+                            zoomResetTimer.restart()
+                        }
+                    }
+                }
+                QGCButton {
+                    Layout.preferredWidth:  _cBtnW
+                    Layout.preferredHeight: _cBtnH
+                    text:                   qsTr("变焦(-)")
+                    pointSize:              ScreenTools.defaultFontPointSize
+                    fontWeight:             Font.Bold
+                    showBorder:             true
+                    textColor:              _cBtnText
+                    enabled:                _activeVehicle !== null
+                    backgroundColor:        _cBtnBg
+                    onClicked: {
+                        if (_activeVehicle) {
+                            _activeVehicle.sendCommand(1, 183, false, 9, 2000, 0, 0, 0, 0, 0)
+                            _zoomPulseChannel = 9
+                            zoomResetTimer.restart()
+                        }
                     }
                 }
             }
 
-            // Row 2, Col 2: Zoom Wide (no ack wait)
-            QGCButton {
-                Layout.fillWidth:   true
-                Layout.fillHeight:  true
-                text:               qsTr("变焦近")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                enabled:            _activeVehicle !== null
-                opacity:            0.5
-                backgroundColor:    "#4A90D9"
-                onClicked: {
-                    if (_activeVehicle) {
-                        _activeVehicle.sendCommand(1, 183, false, 9, 2000, 0, 0, 0, 0, 0)
-                        _zoomPulseChannel = 9
-                        zoomResetTimer.restart()
+            // Row 5: 夜视 | 补光
+            RowLayout {
+                Layout.fillWidth:       true
+                Layout.preferredHeight: _cBtnH
+                spacing:                _margins / 2
+                QGCButton {
+                    Layout.preferredWidth:  _cBtnW
+                    Layout.preferredHeight: _cBtnH
+                    text:                   _nightVisionOn ? qsTr("夜视·开") : qsTr("夜视·关")
+                    pointSize:              ScreenTools.defaultFontPointSize
+                    fontWeight:             Font.Bold
+                    showBorder:             true
+                    textColor:              _nightVisionOn ? _cValueText : _cBtnText
+                    enabled:                _activeVehicle !== null
+                    backgroundColor:        _nightVisionOn ? _cActiveBg : _cBtnBg
+                    onClicked: {
+                        if (_activeVehicle) {
+                            _nightVisionOn = !_nightVisionOn
+                            var pwm = _nightVisionOn ? 2000 : 1000
+                            _activeVehicle.sendCommand(1, 183, false, 11, pwm, 0, 0, 0, 0, 0)
+                        }
+                    }
+                }
+                QGCButton {
+                    Layout.preferredWidth:  _cBtnW
+                    Layout.preferredHeight: _cBtnH
+                    text:                   _fillLightOn ? qsTr("补光·开") : qsTr("补光·关")
+                    pointSize:              ScreenTools.defaultFontPointSize
+                    fontWeight:             Font.Bold
+                    showBorder:             true
+                    textColor:              _fillLightOn ? _cValueText : _cBtnText
+                    enabled:                _activeVehicle !== null
+                    backgroundColor:        _fillLightOn ? _cActiveBg : _cBtnBg
+                    onClicked: {
+                        if (_activeVehicle) {
+                            _fillLightOn = !_fillLightOn
+                            var pwm = _fillLightOn ? 2000 : 1000
+                            _activeVehicle.sendCommand(1, 183, false, 12, pwm, 0, 0, 0, 0, 0)
+                        }
                     }
                 }
             }
 
-            // Row 3, Col 1: Night Vision (toggle)
-            QGCButton {
-                Layout.fillWidth:   true
-                Layout.fillHeight:  true
-                text:               _nightVisionOn ? qsTr("夜视·开") : qsTr("夜视·关")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                enabled:            _activeVehicle !== null
-                opacity:            0.5
-                backgroundColor:    _nightVisionOn ? "#4A90D9" : "#2C5F8A"
-                onClicked: {
-                    if (_activeVehicle) {
-                        _nightVisionOn = !_nightVisionOn
-                        var pwm = _nightVisionOn ? 2000 : 1000
-                        _activeVehicle.sendCommand(1, 183, false, 11, pwm, 0, 0, 0, 0, 0)
-                    }
+            // Row 6: 预留按钮1 | 预留按钮2
+            RowLayout {
+                Layout.fillWidth:       true
+                Layout.preferredHeight: _cBtnH
+                spacing:                _margins / 2
+                QGCButton {
+                    Layout.preferredWidth:  _cBtnW
+                    Layout.preferredHeight: _cBtnH
+                    text:                   "—"
+                    pointSize:              ScreenTools.smallFontPointSize
+                    fontWeight:             Font.Bold
+                    showBorder:             true
+                    textColor:              _cLabelText
+                    enabled:                false
+                    backgroundColor:        _cBtnBg
                 }
-            }
-
-            // Row 3, Col 2: Fill Light (toggle)
-            QGCButton {
-                Layout.fillWidth:   true
-                Layout.fillHeight:  true
-                text:               _fillLightOn ? qsTr("补光·开") : qsTr("补光·关")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                enabled:            _activeVehicle !== null
-                opacity:            0.5
-                backgroundColor:    _fillLightOn ? "#4A90D9" : "#2C5F8A"
-                onClicked: {
-                    if (_activeVehicle) {
-                        _fillLightOn = !_fillLightOn
-                        var pwm = _fillLightOn ? 2000 : 1000
-                        _activeVehicle.sendCommand(1, 183, false, 12, pwm, 0, 0, 0, 0, 0)
-                    }
+                QGCButton {
+                    Layout.preferredWidth:  _cBtnW
+                    Layout.preferredHeight: _cBtnH
+                    text:                   "—"
+                    pointSize:              ScreenTools.smallFontPointSize
+                    fontWeight:             Font.Bold
+                    showBorder:             true
+                    textColor:              _cLabelText
+                    enabled:                false
+                    backgroundColor:        _cBtnBg
                 }
             }
         }
     }
 
-    //-- Camera Centering Button (circular, below servo panel)
-    Rectangle {
-        id:                     centerButton
-        anchors.top:            servoPanel.bottom
-        anchors.topMargin:      _margins / 2
-        anchors.horizontalCenter: servoPanel.horizontalCenter
-        width:                  ScreenTools.defaultFontPixelHeight * 5
-        height:                 width
-        radius:                 width / 2
-        color:                  "#4A90D9"
-        opacity:                0.5
-        visible:                !QGroundControl.videoManager.fullScreen
-        border.color:           Qt.rgba(1, 1, 1, 0.3)
-
-        DeadMouseArea {
-            anchors.fill: parent
-        }
-
-        QGCLabel {
-            anchors.centerIn:   parent
-            text:               qsTr("回中")
-            font.pointSize:     ScreenTools.defaultFontPointSize
-            color:              "white"
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            enabled: _activeVehicle !== null
-            onClicked: {
-                if (_activeVehicle) {
-                    _activeVehicle.sendCommand(1, 205, false, 0, 0, 0, 0, 0, 0, 1)
-                }
-            }
-        }
-    }
-
-
-    //-- Right Side: Action Buttons (individual floating items)
-    Rectangle {
-        id:                     btnRTL
+    //-- Right Side: Vertical Action Column (RTL buttons + mode switches + arm circle)
+    Item {
+        id:                     rightPanel
         anchors.top:            parent.top
-        anchors.topMargin:      parent.height * 0.15
+        anchors.topMargin:      parent.height * 0.12
+        anchors.bottom:         parent.bottom
+        anchors.bottomMargin:   _margins
         anchors.right:          parent.right
         anchors.rightMargin:    _margins
         width:                  ScreenTools.defaultFontPixelWidth * 16
-        height:                 ScreenTools.defaultFontPixelHeight * 4
-        color:                  Qt.rgba(0, 0, 0, 0.55)
-        border.color:           Qt.rgba(1, 1, 1, 0.15)
-        radius:                 4
         visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
             anchors.fill: parent
         }
 
-        QGCButton {
-            anchors.fill:       parent
-            text:               qsTr("直线返航")
-            font.pointSize:     ScreenTools.largeFontPointSize
-            enabled:            _activeVehicle !== null
-            backgroundColor:    "#E74C3C"
-            onClicked: { if (_activeVehicle) confirmRTLDialog.open() }
-        }
-    }
+        ColumnLayout {
+            anchors.fill:   parent
+            spacing:        _margins
 
-    Rectangle {
-        id:                     btnSmartRTL
-        anchors.top:            btnRTL.bottom
-        anchors.topMargin:      _margins
-        anchors.right:          parent.right
-        anchors.rightMargin:    _margins
-        width:                  ScreenTools.defaultFontPixelWidth * 16
-        height:                 ScreenTools.defaultFontPixelHeight * 4
-        color:                  Qt.rgba(0, 0, 0, 0.55)
-        border.color:           Qt.rgba(1, 1, 1, 0.15)
-        radius:                 4
-        visible:                !QGroundControl.videoManager.fullScreen
-
-        DeadMouseArea {
-            anchors.fill: parent
-        }
-
-        QGCButton {
-            anchors.fill:       parent
-            text:               qsTr("原路返航")
-            font.pointSize:     ScreenTools.largeFontPointSize
-            enabled:            _activeVehicle !== null
-            backgroundColor:    "#E67E22"
-            onClicked: { if (_activeVehicle) confirmSmartRTLDialog.open() }
-        }
-    }
-
-    Rectangle {
-        id:                     btnArm
-        anchors.top:            btnSmartRTL.bottom
-        anchors.topMargin:      _margins
-        anchors.right:          parent.right
-        anchors.rightMargin:    _margins
-        width:                  ScreenTools.defaultFontPixelWidth * 16
-        height:                 ScreenTools.defaultFontPixelHeight * 4
-        color:                  Qt.rgba(0, 0, 0, 0.55)
-        border.color:           Qt.rgba(1, 1, 1, 0.15)
-        radius:                 4
-        visible:                !QGroundControl.videoManager.fullScreen
-
-        DeadMouseArea {
-            anchors.fill: parent
-        }
-
-        QGCButton {
-            anchors.fill:       parent
-            text:               _activeVehicle ? (_activeVehicle.armed ? qsTr("锁定") : qsTr("解锁")) : qsTr("解锁")
-            font.pointSize:     ScreenTools.largeFontPointSize
-            enabled:            _activeVehicle !== null
-            backgroundColor:    _activeVehicle ? (_activeVehicle.armed ? "#E6A817" : "#27AE60") : "gray"
-            onClicked: {
-                if (_activeVehicle) {
-                    if (_activeVehicle.armed) {
-                        confirmDisarmDialog.open()
-                    } else {
-                        confirmArmDialog.open()
-                    }
-                }
-            }
-        }
-    }
-
-    //-- Bottom: Quick Mode Switch Buttons (overlay, horizontal)
-    Rectangle {
-        id:                         quickModeBar
-        anchors.bottom:             parent.bottom
-        anchors.bottomMargin:       _margins
-        anchors.horizontalCenter:   parent.horizontalCenter
-        width:                      ScreenTools.defaultFontPixelWidth * 50
-        height:                     ScreenTools.defaultFontPixelHeight * 5
-        color:                      Qt.rgba(0, 0, 0, 0.6)
-        border.color:               Qt.rgba(1, 1, 1, 0.15)
-        radius:                     4
-        visible:                    !QGroundControl.videoManager.fullScreen
-
-        DeadMouseArea {
-            anchors.fill: parent
-        }
-
-        RowLayout {
-            anchors.centerIn:   parent
-            spacing:            _margins * 1.5
-
+            // RTL
             QGCButton {
-                text:               qsTr("手动模式")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 3
-                Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 13
-                enabled:            _activeVehicle !== null && _activeVehicle.flightMode !== "Manual"
-                backgroundColor:    "#4A90D9"
+                Layout.fillWidth:       true
+                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 4
+                text:                   qsTr("直线返航")
+                pointSize:              ScreenTools.largeFontPointSize
+                fontWeight:             Font.Bold
+                showBorder:             true
+                textColor:              _cBtnText
+                enabled:                _activeVehicle !== null
+                backgroundColor:        _cPanelBg
+                onClicked: { if (_activeVehicle) confirmRTLDialog.open() }
+            }
+
+            // Smart RTL
+            QGCButton {
+                Layout.fillWidth:       true
+                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 4
+                text:                   qsTr("原路返航")
+                pointSize:              ScreenTools.largeFontPointSize
+                fontWeight:             Font.Bold
+                showBorder:             true
+                textColor:              _cBtnText
+                enabled:                _activeVehicle !== null
+                backgroundColor:        _cPanelBg
+                onClicked: { if (_activeVehicle) confirmSmartRTLDialog.open() }
+            }
+
+            // Separator
+            Rectangle {
+                Layout.fillWidth:   true
+                Layout.preferredHeight: 1
+                color:              Qt.rgba(1, 1, 1, 0.2)
+            }
+
+            // Manual Mode
+            QGCButton {
+                Layout.fillWidth:       true
+                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 4
+                text:                   qsTr("手动模式")
+                pointSize:              ScreenTools.largeFontPointSize
+                fontWeight:             Font.Bold
+                showBorder:             true
+                enabled:                _activeVehicle !== null
+                textColor:              _activeVehicle && _activeVehicle.flightMode === "Manual" ? _cValueText : _cBtnText
+                backgroundColor:        _activeVehicle && _activeVehicle.flightMode === "Manual" ? _cActiveBg : _cPanelBg
                 onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Manual" }
             }
+
+            // Auto Mode
             QGCButton {
-                text:               qsTr("抛锚模式")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 3
-                Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 13
-                enabled:            _activeVehicle !== null && _activeVehicle.flightMode !== "Loiter"
-                backgroundColor:    "#4A90D9"
+                Layout.fillWidth:       true
+                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 4
+                text:                   qsTr("自动模式")
+                pointSize:              ScreenTools.largeFontPointSize
+                fontWeight:             Font.Bold
+                showBorder:             true
+                enabled:                _activeVehicle !== null
+                textColor:              _activeVehicle && _activeVehicle.flightMode === "Auto" ? _cValueText : _cBtnText
+                backgroundColor:        _activeVehicle && _activeVehicle.flightMode === "Auto" ? _cActiveBg : _cPanelBg
+                onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Auto" }
+            }
+
+            // Loiter (Anchor) Mode
+            QGCButton {
+                Layout.fillWidth:       true
+                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 4
+                text:                   qsTr("抛锚模式")
+                pointSize:              ScreenTools.largeFontPointSize
+                fontWeight:             Font.Bold
+                showBorder:             true
+                enabled:                _activeVehicle !== null
+                textColor:              _activeVehicle && _activeVehicle.flightMode === "Loiter" ? _cValueText : _cBtnText
+                backgroundColor:        _activeVehicle && _activeVehicle.flightMode === "Loiter" ? _cActiveBg : _cPanelBg
                 onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Loiter" }
             }
-            QGCButton {
-                text:               qsTr("自动模式")
-                font.pointSize:     ScreenTools.defaultFontPointSize
-                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 3
-                Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 13
-                enabled:            _activeVehicle !== null && _activeVehicle.flightMode !== "Auto"
-                backgroundColor:    "#4A90D9"
-                onClicked: { if (_activeVehicle) _activeVehicle.flightMode = "Auto" }
+
+            Item { Layout.fillHeight: true }
+
+            // Arm/Disarm Circular Button (special red/green color)
+            Rectangle {
+                Layout.alignment:       Qt.AlignHCenter
+                Layout.preferredWidth:  ScreenTools.defaultFontPixelHeight * 6
+                Layout.preferredHeight: Layout.preferredWidth
+                radius:                 Layout.preferredWidth / 2
+                color:                  _activeVehicle && _activeVehicle.armed ? _cDisarmColor : _cArmColor
+                border.color:           Qt.rgba(1, 1, 1, 0.5)
+                border.width:           2
+                opacity:                _activeVehicle !== null ? 1 : 0.4
+
+                QGCLabel {
+                    anchors.centerIn:   parent
+                    text:               _activeVehicle && _activeVehicle.armed ? qsTr("锁定") : qsTr("解锁")
+                    font.pointSize:     ScreenTools.largeFontPointSize
+                    font.bold:          true
+                    color:              _cBtnText
+                }
+
+                MouseArea {
+                    anchors.fill:   parent
+                    enabled:        _activeVehicle !== null
+                    onClicked: {
+                        if (_activeVehicle) {
+                            if (_activeVehicle.armed) {
+                                confirmDisarmDialog.open()
+                            } else {
+                                confirmArmDialog.open()
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -623,9 +691,9 @@ Item {
         anchors.rightMargin:    ScreenTools.defaultFontPixelWidth * 18
         width:                  ScreenTools.defaultFontPixelWidth * 14
         height:                 ScreenTools.defaultFontPixelHeight * 3.5
-        color:                  Qt.rgba(0, 0, 0, 0.5)
+        color:                  _cPanelBg
         radius:                 4
-        border.color:           Qt.rgba(1, 1, 1, 0.15)
+        border.color:           _cPanelBorder
         visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
@@ -638,7 +706,7 @@ Item {
             QGCLabel {
                 text:           qsTr("高级模式")
                 font.pointSize: ScreenTools.smallFontPointSize
-                color:          "#AAAAAA"
+                color:          _cLabelText
             }
             QGCSwitch {
                 id:                 modeSwitch
