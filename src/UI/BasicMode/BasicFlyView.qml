@@ -692,11 +692,12 @@ Item {
         anchors.topMargin:      _margins
         anchors.right:          parent.right
         anchors.rightMargin:    ScreenTools.defaultFontPixelWidth * 18
-        width:                  ScreenTools.defaultFontPixelWidth * 14
-        height:                 ScreenTools.defaultFontPixelHeight * 3.5
+        width:                  ScreenTools.defaultFontPixelWidth * 18
+        height:                 ScreenTools.defaultFontPixelHeight * 3
         color:                  _cPanelBg
         radius:                 4
         border.color:           _cPanelBorder
+        border.width:           1
         visible:                !QGroundControl.videoManager.fullScreen
 
         DeadMouseArea {
@@ -704,15 +705,23 @@ Item {
         }
 
         RowLayout {
-            anchors.centerIn:   parent
+            anchors.fill:       parent
+            anchors.margins:    _margins / 2
             spacing:            _margins / 2
+
             QGCLabel {
-                text:           qsTr("高级模式")
-                font.pointSize: ScreenTools.smallFontPointSize
-                color:          _cLabelText
+                Layout.alignment:   Qt.AlignVCenter
+                text:               qsTr("高级模式")
+                font.pointSize:     ScreenTools.defaultFontPointSize
+                font.bold:          true
+                color:              _cBtnText
             }
+
+            Item { Layout.fillWidth: true }
+
             QGCSwitch {
                 id:                 modeSwitch
+                Layout.alignment:   Qt.AlignVCenter
                 checked:            false
                 onCheckedChanged: {
                     if (checked) { advancedModeConfirmation.open() }
