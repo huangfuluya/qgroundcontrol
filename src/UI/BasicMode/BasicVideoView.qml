@@ -8,7 +8,7 @@
  ****************************************************************************/
 
 // Video Monitor - Full-screen video with on-screen gimbal controls
-// Top-right: 摄像头切换  Bottom-right: Record + Photo
+// Bottom-right: Record + Photo
 
 import QtQuick
 import QtQuick.Controls
@@ -60,21 +60,6 @@ Item {
             anchors.centerIn: parent
             visible:        !QGroundControl.videoManager.decoding2
         }
-    }
-
-    //-- Camera switch (video source toggle)
-    QGCButton {
-        anchors.top:        parent.top
-        anchors.right:      parent.right
-        anchors.margins:    _margins * 2
-        text:               qsTr("摄像头切换")
-        font.pointSize:     ScreenTools.defaultFontPointSize
-        width:              ScreenTools.defaultFontPixelWidth * 6
-        height:             ScreenTools.defaultFontPixelHeight * 2.5
-        visible:            QGroundControl.videoManager.hasVideo2
-        z:                  QGroundControl.zOrderWidgets
-        opacity:            0.7
-        onClicked: { _showingSecondVideo = !_showingSecondVideo; QGroundControl.videoManager.setSecondVideoActive(_showingSecondVideo) }
     }
 
     //-- On-Screen Gimbal Controller

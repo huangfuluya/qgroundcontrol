@@ -93,23 +93,6 @@ Item {
         }
     }
 
-    //-- Video switch button (only when second video is configured)
-    QGCButton {
-        text:               qsTr("摄像头切换")
-        visible:            QGroundControl.videoManager.hasVideo2
-        anchors.top:        parent.top
-        anchors.right:      parent.right
-        anchors.margins:    ScreenTools.defaultFontPixelWidth
-        width:              ScreenTools.defaultFontPixelWidth * 14
-        height:             ScreenTools.defaultFontPixelHeight * 2.5
-        z:                  QGroundControl.zOrderWidgets
-        opacity:            0.7
-        onClicked: {
-            _showingSecondVideo = !_showingSecondVideo
-            QGroundControl.videoManager.setSecondVideoActive(_showingSecondVideo)
-        }
-    }
-
     QGCLabel {
         text: qsTr("Double-click to exit full screen")
         font.pointSize: ScreenTools.largeFontPointSize

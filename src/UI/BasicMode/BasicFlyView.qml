@@ -45,6 +45,7 @@ Item {
     property bool  _nightVisionOn:         false ///< Night vision toggle state
     property bool  _fillLightOn:           false ///< Fill light toggle state
     property int   _zoomPulseChannel:      -1    ///< Zoom channel, no ack wait
+    property bool  _showingSecondVideo:    false ///< Video source 1/2 toggle state
 
     //-- Outdoor high-contrast color scheme
     readonly property color _cPanelBg:      Qt.rgba(0, 0, 0, 0.75)      ///< Panel background
@@ -58,7 +59,7 @@ Item {
     readonly property color _cDisarmColor:  "#C62828"                   ///< Disarm (lock) red
     readonly property real _cBtnW:          ScreenTools.defaultFontPixelWidth * 10  ///< Button cell width
     readonly property real _cBtnH:          ScreenTools.defaultFontPixelHeight * 2.6  ///< Button cell height
-    readonly property real _leftPanelContentH: (_cBtnH * 1.0) + (_cBtnH * 1.4) + (4 * _cBtnH * 1.5) + (5 * _margins / 2)
+    readonly property real _leftPanelContentH: (_cBtnH * 1.0) + (_cBtnH * 1.4) + (4 * _cBtnH) + (5 * _margins / 2)
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
@@ -282,8 +283,7 @@ Item {
         id:                     leftPanel
         anchors.left:           leftStrip.right
         anchors.leftMargin:     _margins / 2
-        anchors.bottom:         parent.bottom
-        anchors.bottomMargin:   _margins
+        anchors.verticalCenter: parent.verticalCenter
         width:                  _cBtnW * 2 + _margins * 1.5
         height:                 _leftPanelContentH + _margins + _cBtnH * 0.5
         color:                  _cPanelBg
@@ -303,7 +303,7 @@ Item {
             anchors.margins:    _margins / 2
             spacing:            _margins / 2
 
-            //-- Row 1: 镜头切换 (Camera / Map toggle)
+            //-- Row 1: 镜头切换 (Video source 1 / 2 toggle)
             QGCButton {
                 Layout.fillWidth:       true
                 Layout.preferredHeight: _cBtnH
@@ -312,9 +312,12 @@ Item {
                 fontWeight:             Font.Bold
                 showBorder:             true
                 textColor:              _cBtnText
-                enabled:                QGroundControl.videoManager.hasVideo
+                enabled:                QGroundControl.videoManager.hasVideo2
                 backgroundColor:        _cBtnBg
-                onClicked: { _pipView._swapPip() }
+                onClicked: {
+                    _showingSecondVideo = !_showingSecondVideo
+                    QGroundControl.videoManager.setSecondVideoActive(_showingSecondVideo)
+                }
             }
 
             //-- Row 2: 回中 (circular, centered)
